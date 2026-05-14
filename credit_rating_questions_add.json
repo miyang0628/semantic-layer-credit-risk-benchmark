@@ -1,0 +1,272 @@
+[
+  {
+    "question_id": "CR31",
+    "difficulty": "simple",
+    "category": "default_risk",
+    "question": "How many loan contracts have been completed with no repayment problems?",
+    "evidence": "Completed with no problems means status = 'A'.",
+    "SQL": "SELECT COUNT(loan_id) FROM loan WHERE status = 'A'",
+    "credit_rating_context": "Volume of successfully repaid loans — positive credit signal."
+  },
+  {
+    "question_id": "CR32",
+    "difficulty": "moderate",
+    "category": "default_risk",
+    "question": "What is the default rate for loans approved before 1996 versus after 1996?",
+    "evidence": "Default includes status B and D. Loan approval date is in loan.date.",
+    "SQL": "SELECT CASE WHEN STRFTIME('%Y', date) < '1996' THEN 'before_1996' ELSE 'after_1996' END AS period, CAST(SUM(CASE WHEN status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(*) * 100 AS default_rate FROM loan GROUP BY period",
+    "credit_rating_context": "Vintage default rate comparison — credit cycle analysis."
+  },
+  {
+    "question_id": "CR33",
+    "difficulty": "challenging",
+    "category": "default_risk",
+    "question": "For each loan duration group (up to 12, 13-36, over 36 months), calculate the default rate and average loan amount.",
+    "evidence": "Default means status B or D. Duration is in months.",
+    "SQL": "SELECT CASE WHEN duration <= 12 THEN 'short' WHEN duration <= 36 THEN 'medium' ELSE 'long' END AS duration_group, CAST(SUM(CASE WHEN status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(*) * 100 AS default_rate, AVG(amount) AS avg_amount FROM loan GROUP BY duration_group",
+    "credit_rating_context": "Maturity-segmented default risk — core input for credit scoring."
+  },
+  {
+    "question_id": "CR34",
+    "difficulty": "simple",
+    "category": "regional_risk",
+    "question": "How many distinct districts have at least one defaulted loan account?",
+    "evidence": "Default means loan status B or D. District information is linked via account table.",
+    "SQL": "SELECT COUNT(DISTINCT district.district_id) FROM district JOIN account ON district.district_id = account.district_id JOIN loan ON account.account_id = loan.account_id WHERE loan.status IN ('B','D')",
+    "credit_rating_context": "Geographic spread of credit risk."
+  },
+  {
+    "question_id": "CR35",
+    "difficulty": "simple",
+    "category": "regional_risk",
+    "question": "What is the average salary in districts that have more than 10 loan accounts?",
+    "evidence": "Average salary is in district column A11.",
+    "SQL": "SELECT AVG(district.A11) FROM district JOIN account ON district.district_id = account.district_id JOIN loan ON account.account_id = loan.account_id GROUP BY district.district_id HAVING COUNT(loan.loan_id) > 10",
+    "credit_rating_context": "Income profile of districts with significant loan exposure."
+  },
+  {
+    "question_id": "CR36",
+    "difficulty": "moderate",
+    "category": "regional_risk",
+    "question": "List regions where the total loan amount exceeds the regional average total loan amount.",
+    "evidence": "Region information is in district column A3.",
+    "SQL": "SELECT district.A3 AS region, SUM(loan.amount) AS total_loan FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id GROUP BY district.A3 HAVING SUM(loan.amount) > (SELECT AVG(regional_total) FROM (SELECT SUM(loan.amount) AS regional_total FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id GROUP BY district.A3))",
+    "credit_rating_context": "Above-average loan concentration by region."
+  },
+  {
+    "question_id": "CR37",
+    "difficulty": "moderate",
+    "category": "regional_risk",
+    "question": "For each region, what percentage of loan accounts are currently running with no issues?",
+    "evidence": "Running with no issues means status = 'C'. Region is in district column A3.",
+    "SQL": "SELECT district.A3 AS region, CAST(SUM(CASE WHEN loan.status = 'C' THEN 1 ELSE 0 END) AS REAL) / COUNT(loan.loan_id) * 100 AS healthy_rate FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id GROUP BY district.A3 ORDER BY healthy_rate DESC",
+    "credit_rating_context": "Regional portfolio health rate."
+  },
+  {
+    "question_id": "CR38",
+    "difficulty": "challenging",
+    "category": "regional_risk",
+    "question": "Identify regions where the unemployment rate increased from 1995 to 1996 and also have above-average loan default rates.",
+    "evidence": "Unemployment rate 1995 is A12, 1996 is A13. Default means status B or D.",
+    "SQL": "SELECT district.A3 AS region, (district.A13 - district.A12) AS unemployment_increase, CAST(SUM(CASE WHEN loan.status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(loan.loan_id) * 100 AS default_rate FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id WHERE district.A13 > district.A12 GROUP BY district.A3, district.A12, district.A13 HAVING default_rate > (SELECT CAST(SUM(CASE WHEN status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(*) * 100 FROM loan) ORDER BY default_rate DESC",
+    "credit_rating_context": "Macro-micro risk convergence — high unemployment + high default regions."
+  },
+  {
+    "question_id": "CR39",
+    "difficulty": "simple",
+    "category": "transaction_behavior",
+    "question": "What is the total number of cash withdrawal transactions across all accounts?",
+    "evidence": "Cash withdrawal means operation = 'VYBER'.",
+    "SQL": "SELECT COUNT(trans_id) FROM trans WHERE operation = 'VYBER'",
+    "credit_rating_context": "Cash dependency indicator across the portfolio."
+  },
+  {
+    "question_id": "CR40",
+    "difficulty": "simple",
+    "category": "transaction_behavior",
+    "question": "What is the average transaction amount for credit card withdrawals?",
+    "evidence": "Credit card withdrawal means operation = 'VYBER KARTOU'.",
+    "SQL": "SELECT AVG(amount) FROM trans WHERE operation = 'VYBER KARTOU'",
+    "credit_rating_context": "Average card spending level — consumer credit behavior indicator."
+  },
+  {
+    "question_id": "CR41",
+    "difficulty": "moderate",
+    "category": "transaction_behavior",
+    "question": "For accounts with defaulted loans, what is the ratio of withdrawal transactions to deposit transactions?",
+    "evidence": "Withdrawal means type = 'VYDAJ'. Deposit means type = 'PRIJEM'. Default means loan status D.",
+    "SQL": "SELECT CAST(SUM(CASE WHEN trans.type = 'VYDAJ' THEN 1 ELSE 0 END) AS REAL) / NULLIF(SUM(CASE WHEN trans.type = 'PRIJEM' THEN 1 ELSE 0 END), 0) AS withdrawal_deposit_ratio FROM trans JOIN loan ON trans.account_id = loan.account_id WHERE loan.status = 'D'",
+    "credit_rating_context": "Spending-to-income ratio proxy for defaulted borrowers."
+  },
+  {
+    "question_id": "CR42",
+    "difficulty": "moderate",
+    "category": "transaction_behavior",
+    "question": "Which accounts had their balance drop below zero within 6 months of loan approval?",
+    "evidence": "Negative balance means balance < 0 in trans table. Loan approval date is in loan.date.",
+    "SQL": "SELECT DISTINCT loan.account_id FROM loan JOIN trans ON loan.account_id = trans.account_id WHERE trans.balance < 0 AND trans.date >= loan.date AND trans.date <= DATE(loan.date, '+6 months')",
+    "credit_rating_context": "Early distress signal post loan origination."
+  },
+  {
+    "question_id": "CR43",
+    "difficulty": "challenging",
+    "category": "transaction_behavior",
+    "question": "Compare the average monthly deposit amount in the 6 months before and after loan approval for defaulted versus non-defaulted accounts.",
+    "evidence": "Deposit means type = 'PRIJEM'. Default means loan status B or D.",
+    "SQL": "SELECT loan_group, period, AVG(monthly_deposit) AS avg_monthly_deposit FROM (SELECT CASE WHEN loan.status IN ('B','D') THEN 'defaulted' ELSE 'non_defaulted' END AS loan_group, CASE WHEN trans.date < loan.date AND trans.date >= DATE(loan.date, '-6 months') THEN 'pre_loan' WHEN trans.date >= loan.date AND trans.date <= DATE(loan.date, '+6 months') THEN 'post_loan' ELSE NULL END AS period, trans.account_id, STRFTIME('%Y-%m', trans.date) AS month, SUM(trans.amount) AS monthly_deposit FROM trans JOIN loan ON trans.account_id = loan.account_id WHERE trans.type = 'PRIJEM' GROUP BY loan_group, period, trans.account_id, month) WHERE period IS NOT NULL GROUP BY loan_group, period",
+    "credit_rating_context": "Income shock detection around loan origination."
+  },
+  {
+    "question_id": "CR44",
+    "difficulty": "simple",
+    "category": "loan_portfolio",
+    "question": "What is the maximum and minimum loan amount in the portfolio?",
+    "evidence": "Loan amount is stored in the amount column of the loan table.",
+    "SQL": "SELECT MAX(amount) AS max_loan, MIN(amount) AS min_loan FROM loan",
+    "credit_rating_context": "Loan size range — portfolio concentration risk indicator."
+  },
+  {
+    "question_id": "CR45",
+    "difficulty": "simple",
+    "category": "loan_portfolio",
+    "question": "How many loan accounts have a duration of exactly 60 months?",
+    "evidence": "Duration is measured in months in the loan table.",
+    "SQL": "SELECT COUNT(loan_id) FROM loan WHERE duration = 60",
+    "credit_rating_context": "5-year loan volume — long-term credit exposure."
+  },
+  {
+    "question_id": "CR46",
+    "difficulty": "moderate",
+    "category": "loan_portfolio",
+    "question": "What is the average monthly payment amount for currently running loan contracts?",
+    "evidence": "Running contracts have status C or D. Monthly payment is stored in the payments column.",
+    "SQL": "SELECT AVG(payments) FROM loan WHERE status IN ('C','D')",
+    "credit_rating_context": "Average debt service burden for active borrowers."
+  },
+  {
+    "question_id": "CR47",
+    "difficulty": "moderate",
+    "category": "loan_portfolio",
+    "question": "What proportion of the total loan portfolio value is accounted for by defaulted contracts?",
+    "evidence": "Default means status B or D. Portfolio value = sum of all loan amounts.",
+    "SQL": "SELECT CAST(SUM(CASE WHEN status IN ('B','D') THEN amount ELSE 0 END) AS REAL) / SUM(amount) * 100 AS default_portfolio_pct FROM loan",
+    "credit_rating_context": "NPL value concentration — capital adequacy assessment input."
+  },
+  {
+    "question_id": "CR48",
+    "difficulty": "challenging",
+    "category": "loan_portfolio",
+    "question": "Calculate the Herfindahl-Hirschman Index (HHI) of loan concentration by district to measure geographic portfolio concentration.",
+    "evidence": "HHI = sum of squared market shares. Market share = district loan amount / total loan amount. District name is in column A2.",
+    "SQL": "SELECT SUM(share * share) * 10000 AS hhi FROM (SELECT CAST(SUM(loan.amount) AS REAL) / (SELECT SUM(amount) FROM loan) AS share FROM loan JOIN account ON loan.account_id = account.account_id JOIN district ON account.district_id = district.district_id GROUP BY district.district_id)",
+    "credit_rating_context": "Geographic loan concentration index — regulatory risk metric."
+  },
+  {
+    "question_id": "CR49",
+    "difficulty": "challenging",
+    "category": "loan_portfolio",
+    "question": "For each year of loan approval, calculate the proportion of loans that eventually defaulted.",
+    "evidence": "Default means status B or D. Year is derived from loan approval date.",
+    "SQL": "SELECT STRFTIME('%Y', date) AS approval_year, COUNT(loan_id) AS total_loans, SUM(CASE WHEN status IN ('B','D') THEN 1 ELSE 0 END) AS defaulted, CAST(SUM(CASE WHEN status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(loan_id) * 100 AS default_rate FROM loan GROUP BY approval_year ORDER BY approval_year",
+    "credit_rating_context": "Vintage default analysis — credit cycle tracking."
+  },
+  {
+    "question_id": "CR50",
+    "difficulty": "simple",
+    "category": "client_profile",
+    "question": "How many clients were born before 1950?",
+    "evidence": "Birth date is in the client table.",
+    "SQL": "SELECT COUNT(client_id) FROM client WHERE STRFTIME('%Y', birth_date) < '1950'",
+    "credit_rating_context": "Senior borrower segment size."
+  },
+  {
+    "question_id": "CR51",
+    "difficulty": "simple",
+    "category": "client_profile",
+    "question": "What is the ratio of male to female clients who hold loan accounts?",
+    "evidence": "Gender is in client table. M = male, F = female.",
+    "SQL": "SELECT CAST(SUM(CASE WHEN client.gender = 'M' THEN 1 ELSE 0 END) AS REAL) / NULLIF(SUM(CASE WHEN client.gender = 'F' THEN 1 ELSE 0 END), 0) AS male_female_ratio FROM client JOIN disp ON client.client_id = disp.client_id JOIN loan ON disp.account_id = loan.account_id",
+    "credit_rating_context": "Gender composition of loan portfolio."
+  },
+  {
+    "question_id": "CR52",
+    "difficulty": "simple",
+    "category": "client_profile",
+    "question": "How many clients have both a loan account and a credit card?",
+    "evidence": "Credit cards are linked via disp table. Loan accounts are in the loan table.",
+    "SQL": "SELECT COUNT(DISTINCT client.client_id) FROM client JOIN disp ON client.client_id = disp.client_id JOIN loan ON disp.account_id = loan.account_id JOIN card ON disp.disp_id = card.disp_id",
+    "credit_rating_context": "Cross-product penetration — multi-product client risk profile."
+  },
+  {
+    "question_id": "CR53",
+    "difficulty": "moderate",
+    "category": "client_profile",
+    "question": "What is the average loan amount for clients grouped by decade of birth?",
+    "evidence": "Birth decade derived from birth_date. Loan amount is in loan table.",
+    "SQL": "SELECT (CAST(STRFTIME('%Y', client.birth_date) AS INTEGER) / 10) * 10 AS birth_decade, AVG(loan.amount) AS avg_loan_amount FROM client JOIN disp ON client.client_id = disp.client_id JOIN loan ON disp.account_id = loan.account_id GROUP BY birth_decade ORDER BY birth_decade",
+    "credit_rating_context": "Age-cohort loan size analysis for demographic credit segmentation."
+  },
+  {
+    "question_id": "CR54",
+    "difficulty": "moderate",
+    "category": "client_profile",
+    "question": "Among clients who have defaulted loans, what is the average age at the time of loan approval?",
+    "evidence": "Default means loan status B or D. Age = loan approval year - birth year.",
+    "SQL": "SELECT AVG(CAST(STRFTIME('%Y', loan.date) AS INTEGER) - CAST(STRFTIME('%Y', client.birth_date) AS INTEGER)) AS avg_age_at_approval FROM client JOIN disp ON client.client_id = disp.client_id JOIN loan ON disp.account_id = loan.account_id WHERE loan.status IN ('B','D')",
+    "credit_rating_context": "Age at origination for defaulted borrowers — behavioral scoring input."
+  },
+  {
+    "question_id": "CR55",
+    "difficulty": "challenging",
+    "category": "client_profile",
+    "question": "Identify clients who have more than one loan account and calculate their overall default rate.",
+    "evidence": "A client can be linked to multiple accounts via the disp table. Default means loan status B or D.",
+    "SQL": "SELECT CAST(SUM(CASE WHEN loan.status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(loan.loan_id) * 100 AS default_rate FROM client JOIN disp ON client.client_id = disp.client_id JOIN loan ON disp.account_id = loan.account_id WHERE client.client_id IN (SELECT disp.client_id FROM disp JOIN loan ON disp.account_id = loan.account_id GROUP BY disp.client_id HAVING COUNT(DISTINCT loan.loan_id) > 1)",
+    "credit_rating_context": "Multi-loan borrower risk — over-indebtedness indicator."
+  },
+  {
+    "question_id": "CR56",
+    "difficulty": "challenging",
+    "category": "client_profile",
+    "question": "For each gender, calculate the default rate by age group (under 40, 40-60, over 60 at time of loan approval).",
+    "evidence": "Age at loan approval = loan year - birth year. Default means status B or D. Gender: M = male, F = female.",
+    "SQL": "SELECT client.gender, CASE WHEN (CAST(STRFTIME('%Y', loan.date) AS INTEGER) - CAST(STRFTIME('%Y', client.birth_date) AS INTEGER)) < 40 THEN 'under_40' WHEN (CAST(STRFTIME('%Y', loan.date) AS INTEGER) - CAST(STRFTIME('%Y', client.birth_date) AS INTEGER)) <= 60 THEN '40_to_60' ELSE 'over_60' END AS age_group, CAST(SUM(CASE WHEN loan.status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(loan.loan_id) * 100 AS default_rate FROM client JOIN disp ON client.client_id = disp.client_id JOIN loan ON disp.account_id = loan.account_id GROUP BY client.gender, age_group ORDER BY client.gender, age_group",
+    "credit_rating_context": "Gender-age intersectional default risk — fair lending compliance."
+  },
+  {
+    "question_id": "CR57",
+    "difficulty": "simple",
+    "category": "card_risk",
+    "question": "How many accounts have a junior credit card?",
+    "evidence": "Junior card means card.type = 'junior'.",
+    "SQL": "SELECT COUNT(DISTINCT account.account_id) FROM account JOIN disp ON account.account_id = disp.account_id JOIN card ON disp.disp_id = card.disp_id WHERE card.type = 'junior'",
+    "credit_rating_context": "Young/entry-level cardholder volume."
+  },
+  {
+    "question_id": "CR58",
+    "difficulty": "simple",
+    "category": "card_risk",
+    "question": "What is the distribution of credit card types across all cardholders?",
+    "evidence": "Card types are classic, gold, and junior.",
+    "SQL": "SELECT type, COUNT(card_id) AS count FROM card GROUP BY type ORDER BY count DESC",
+    "credit_rating_context": "Card tier distribution — portfolio segmentation."
+  },
+  {
+    "question_id": "CR59",
+    "difficulty": "moderate",
+    "category": "card_risk",
+    "question": "What is the average number of credit card transactions per month for gold card holders?",
+    "evidence": "Gold card means card.type = 'gold'. Credit card withdrawal means operation = 'VYBER KARTOU'.",
+    "SQL": "SELECT AVG(monthly_count) FROM (SELECT trans.account_id, STRFTIME('%Y-%m', trans.date) AS month, COUNT(trans.trans_id) AS monthly_count FROM trans JOIN disp ON trans.account_id = disp.account_id JOIN card ON disp.disp_id = card.disp_id WHERE card.type = 'gold' AND trans.operation = 'VYBER KARTOU' GROUP BY trans.account_id, month)",
+    "credit_rating_context": "Gold card usage intensity — premium client behavior."
+  },
+  {
+    "question_id": "CR60",
+    "difficulty": "moderate",
+    "category": "card_risk",
+    "question": "Among accounts with classic credit cards, what proportion have loan contracts in default?",
+    "evidence": "Classic card means card.type = 'classic'. Default means loan status B or D.",
+    "SQL": "SELECT CAST(SUM(CASE WHEN loan.status IN ('B','D') THEN 1 ELSE 0 END) AS REAL) / COUNT(DISTINCT account.account_id) * 100 AS default_rate FROM account JOIN disp ON account.account_id = disp.account_id JOIN card ON disp.disp_id = card.disp_id JOIN loan ON account.account_id = loan.account_id WHERE card.type = 'classic'",
+    "credit_rating_context": "Entry-level card default rate — subprime risk indicator."
+  }
+]

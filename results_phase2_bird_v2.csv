@@ -1,0 +1,1334 @@
+﻿question_id,difficulty,method,is_correct,error,latency_ms,prompt_chars,generated_sql,gold_sql,question
+89,moderate,text_to_sql,False,,2784,2506,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE district.A3 = 'East Bohemia' AND trans.operation = 'POPLATEK PO OBRATU'",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE T1.A3 = 'east Bohemia' AND T2.frequency = 'POPLATEK PO OBRATU',How many accounts who choose issuance after transaction are staying in East Bohemia region?
+89,moderate,semantic_layer,False,,1899,7728,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE account.frequency = 'POPLATEK PO OBRATU' AND district.A3 = 'East Bohemia'",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE T1.A3 = 'east Bohemia' AND T2.frequency = 'POPLATEK PO OBRATU',How many accounts who choose issuance after transaction are staying in East Bohemia region?
+90,simple,text_to_sql,True,,1224,2415,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE district.A3 = 'Prague'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T1.district_id = T3.district_id WHERE T3.A3 = 'Prague',How many accounts who have region in Prague are eligible for loans?
+90,simple,semantic_layer,True,,2516,7637,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE district.A3 = 'Prague'
+-- NOTE: ""eligible for loans"" = has a record in the loan table. Do NOT filter by loan.status.",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T1.district_id = T3.district_id WHERE T3.A3 = 'Prague',How many accounts who have region in Prague are eligible for loans?
+91,simple,text_to_sql,False,,1651,2473,"SELECT 
+   AVG(district.A12) AS avg_unemployment_1995, 
+   AVG(district.A13) AS avg_unemployment_1996
+FROM 
+   district
+GROUP BY 
+   district.district_id
+HAVING 
+   avg_unemployment_1995 > avg_unemployment_1996
+ORDER BY 
+   avg_unemployment_1995 DESC 
+LIMIT 1;","SELECT DISTINCT IIF(AVG(A13) > AVG(A12), '1996', '1995') FROM district","The average unemployment ratio of 1995 and 1996, which one has higher percentage?"
+91,simple,semantic_layer,True,,2605,7695,"SELECT CASE 
+           WHEN AVG(district.A12) > AVG(district.A13) THEN '1995' 
+           ELSE '1996' 
+       END AS higher_unemployment_year
+FROM district;","SELECT DISTINCT IIF(AVG(A13) > AVG(A12), '1996', '1995') FROM district","The average unemployment ratio of 1995 and 1996, which one has higher percentage?"
+92,simple,text_to_sql,True,,1176,2476,"SELECT COUNT(DISTINCT district.district_id)
+   FROM district
+   JOIN client ON district.district_id = client.district_id
+   WHERE client.gender = 'F' AND district.A11 > 6000 AND district.A11 < 10000",SELECT COUNT(DISTINCT T2.district_id)  FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A11 BETWEEN 6000 AND 10000,List out the no. of districts that have female average salary is more than 6000 but less than 10000?
+92,simple,semantic_layer,True,,1458,7698,"SELECT COUNT(DISTINCT district.district_id)
+FROM district
+JOIN client ON district.district_id = client.district_id
+WHERE client.gender = 'F' AND district.A11 > 6000 AND district.A11 < 10000",SELECT COUNT(DISTINCT T2.district_id)  FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A11 BETWEEN 6000 AND 10000,List out the no. of districts that have female average salary is more than 6000 but less than 10000?
+93,moderate,text_to_sql,False,,1550,2494,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'M' AND district.A3 = 'North Bohemia' AND district.A11 > 8000",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A3 = 'north Bohemia' AND T2.A11 > 8000,How many male customers who are living in North Bohemia have average salary greater than 8000?
+93,moderate,semantic_layer,False,,1506,7716,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'M' AND district.A3 = 'North Bohemia' AND district.A11 > 8000",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A3 = 'north Bohemia' AND T2.A11 > 8000,How many male customers who are living in North Bohemia have average salary greater than 8000?
+94,challenging,text_to_sql,False,,2989,2698,"SELECT account.account_id, 
+       (SELECT MAX(district.A11) 
+        FROM district 
+        JOIN client ON client.district_id = district.district_id 
+        WHERE client.gender = 'F') - 
+       (SELECT MIN(district.A11) 
+        FROM district 
+        JOIN client ON client.district_id = district.district_id 
+        WHERE client.gender = 'F') AS salary_gap
+FROM account
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+WHERE client.gender = 'F' 
+  AND client.birth_date = (SELECT MIN(client.birth_date) 
+                           FROM client 
+                           WHERE client.gender = 'F')","SELECT T1.account_id , ( SELECT MAX(A11) - MIN(A11) FROM district ) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T1.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T2.district_id = ( SELECT district_id FROM client WHERE gender = 'F' ORDER BY birth_date ASC LIMIT 1 ) ORDER BY T2.A11 DESC LIMIT 1","List out the account numbers of female clients who are oldest and has lowest average salary, calculate the gap between this lowest average salary with the highest average salary?"
+94,challenging,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT account.account_id
+FROM account
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+JOIN district ON client.district_id = district.district_id
+WHERE client.gender = 'F'
+AND district.A11 = (
+    SELECT MIN(district.A11)
+    FROM client
+    JOIN district ON client.district_id = district.district_id
+    WHERE client.gender = 'F'
+    GROUP BY client.client_id
+)
+GROUP BY account.account_id;
+
+SELECT MAX(district.A11) - MIN(district.A11) AS salary_gap
+FROM district
+WHERE district.district_id IN (
+    SELECT client.district_id
+    FROM client
+    WHERE client.gender = 'F'
+)': You can only execute one statement at a time.",4846,7920,"SELECT account.account_id
+FROM account
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+JOIN district ON client.district_id = district.district_id
+WHERE client.gender = 'F'
+AND district.A11 = (
+    SELECT MIN(district.A11)
+    FROM client
+    JOIN district ON client.district_id = district.district_id
+    WHERE client.gender = 'F'
+    GROUP BY client.client_id
+)
+GROUP BY account.account_id;
+
+SELECT MAX(district.A11) - MIN(district.A11) AS salary_gap
+FROM district
+WHERE district.district_id IN (
+    SELECT client.district_id
+    FROM client
+    WHERE client.gender = 'F'
+)","SELECT T1.account_id , ( SELECT MAX(A11) - MIN(A11) FROM district ) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T1.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T2.district_id = ( SELECT district_id FROM client WHERE gender = 'F' ORDER BY birth_date ASC LIMIT 1 ) ORDER BY T2.A11 DESC LIMIT 1","List out the account numbers of female clients who are oldest and has lowest average salary, calculate the gap between this lowest average salary with the highest average salary?"
+95,moderate,text_to_sql,False,"Generated SQL error: Execution failed on sql 'SELECT account.account_id
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.birth_date = (SELECT MIN(client.birth_date) FROM client)
+   AND district.A11 = (SELECT MAX(district.A11) FROM district)': no such column: account.account_id",1504,2529,"SELECT account.account_id
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.birth_date = (SELECT MIN(client.birth_date) FROM client)
+   AND district.A11 = (SELECT MAX(district.A11) FROM district)","SELECT T1.account_id  FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id INNER JOIN client AS T3 ON T2.client_id = T3.client_id INNER JOIN district AS T4 on T4.district_id = T1.district_id WHERE T2.client_id = ( SELECT client_id FROM client ORDER BY birth_date DESC LIMIT 1) GROUP BY T4.A11, T1.account_id",List out the account numbers of clients who are youngest and have highest average salary?
+95,moderate,semantic_layer,False,,2265,7751,"SELECT account.account_id
+FROM account
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+JOIN district ON client.district_id = district.district_id
+WHERE client.birth_date = (SELECT MIN(birth_date) FROM client)
+AND district.A11 = (SELECT MAX(A11) FROM district);","SELECT T1.account_id  FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id INNER JOIN client AS T3 ON T2.client_id = T3.client_id INNER JOIN district AS T4 on T4.district_id = T1.district_id WHERE T2.client_id = ( SELECT client_id FROM client ORDER BY birth_date DESC LIMIT 1) GROUP BY T4.A11, T1.account_id",List out the account numbers of clients who are youngest and have highest average salary?
+96,simple,text_to_sql,False,,1598,2430,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   WHERE account.frequency = 'POPLATEK TYDNE' AND disp.type = 'Owner'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id WHERE T2.type = 'OWNER' AND T1.frequency = 'POPLATEK TYDNE',How many customers who choose statement of weekly issuance are Owner?
+96,simple,semantic_layer,False,,2242,7652,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   WHERE account.frequency = 'POPLATEK TYDNE' AND disp.type = 'Owner'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id WHERE T2.type = 'OWNER' AND T1.frequency = 'POPLATEK TYDNE',How many customers who choose statement of weekly issuance are Owner?
+97,simple,text_to_sql,False,,1596,2474,"SELECT DISTINCT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN trans ON disp.account_id = trans.account_id
+   WHERE disp.type = 'Disponent' AND trans.operation = 'POPLATEK PO OBRATU'",SELECT T2.client_id FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id WHERE T1.frequency = 'POPLATEK PO OBRATU' AND T2.type = 'DISPONENT',List out the id number of client who choose statement of issuance after transaction are Disponent?
+97,simple,semantic_layer,False,,1691,7696,"SELECT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   WHERE account.frequency = 'POPLATEK PO OBRATU'",SELECT T2.client_id FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id WHERE T1.frequency = 'POPLATEK PO OBRATU' AND T2.type = 'DISPONENT',List out the id number of client who choose statement of issuance after transaction are Disponent?
+98,moderate,text_to_sql,False,,2700,2513,"SELECT account.account_id
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.date >= '1997-01-01' AND loan.date < '1998-01-01'
+   AND loan.amount = (SELECT MIN(loan.amount)
+                      FROM loan
+                      WHERE loan.date >= '1997-01-01' AND loan.date < '1998-01-01')
+   AND account.frequency = 'POPLATEK TYDNE'","SELECT T2.account_id FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T1.date) = '1997' AND T2.frequency = 'POPLATEK TYDNE' ORDER BY T1.amount LIMIT 1","Among the accounts who have approved loan date in 1997, list out the accounts that have the lowest approved amount and choose weekly issuance statement."
+98,moderate,semantic_layer,False,,1738,7735,"SELECT account.account_id, MIN(loan.amount) AS lowest_approved_amount
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE STRFTIME('%Y', loan.date) = '1997' AND account.frequency = 'POPLATEK TYDNE'
+   GROUP BY account.account_id","SELECT T2.account_id FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T1.date) = '1997' AND T2.frequency = 'POPLATEK TYDNE' ORDER BY T1.amount LIMIT 1","Among the accounts who have approved loan date in 1997, list out the accounts that have the lowest approved amount and choose weekly issuance statement."
+99,moderate,text_to_sql,False,,1905,2536,"SELECT account.account_id, MAX(loan.amount) AS highest_approved_amount
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.duration > 12 AND account.date LIKE '1993%'
+   GROUP BY account.account_id
+   ORDER BY highest_approved_amount DESC;","SELECT T1.account_id FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T2.date) = '1993' AND T1.duration > 12 ORDER BY T1.amount DESC LIMIT 1","Among the accounts who have loan validity more than 12 months, list out the accounts that have the highest approved amount and have account opening date in 1993."
+99,moderate,semantic_layer,False,,2032,7758,"SELECT account.account_id, MAX(loan.amount) AS max_approved_amount
+FROM account
+JOIN loan ON account.account_id = loan.account_id
+WHERE loan.duration > 12 AND STRFTIME('%Y', account.date) = '1993'
+GROUP BY account.account_id
+ORDER BY max_approved_amount DESC;","SELECT T1.account_id FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T2.date) = '1993' AND T1.duration > 12 ORDER BY T1.amount DESC LIMIT 1","Among the accounts who have loan validity more than 12 months, list out the accounts that have the highest approved amount and have account opening date in 1993."
+100,moderate,text_to_sql,False,,1893,2515,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN account ON client.client_id = account.account_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F' AND client.birth_date < '1950-01-01' AND district.A2 = 'Sokolov'","SELECT COUNT(T2.client_id) FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T2.gender = 'F' AND STRFTIME('%Y', T2.birth_date) < '1950' AND T1.A2 = 'Sokolov'","Among the account opened, how many female customers who were born before 1950 and stayed in Sokolov?"
+100,moderate,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   JOIN account ON client.client_id = disp.client_id
+   WHERE client.gender = 'F' AND client.birth_date < '1950-01-01' AND district.A2 = 'Sokolov'': no such column: disp.client_id",2152,7737,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   JOIN account ON client.client_id = disp.client_id
+   WHERE client.gender = 'F' AND client.birth_date < '1950-01-01' AND district.A2 = 'Sokolov'","SELECT COUNT(T2.client_id) FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T2.gender = 'F' AND STRFTIME('%Y', T2.birth_date) < '1950' AND T1.A2 = 'Sokolov'","Among the account opened, how many female customers who were born before 1950 and stayed in Sokolov?"
+101,simple,text_to_sql,False,,2150,2388,"SELECT account.account_id
+   FROM account
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.date BETWEEN '1995-01-01' AND '1995-12-31'
+   GROUP BY account.account_id
+   HAVING MIN(trans.date) = (SELECT MIN(trans.date)
+                               FROM trans
+                               WHERE trans.date BETWEEN '1995-01-01' AND '1995-12-31')","SELECT account_id FROM trans WHERE STRFTIME('%Y', date) = '1995' ORDER BY date ASC LIMIT 1",List out the accounts who have the earliest trading date in 1995 ?
+101,simple,semantic_layer,True,,1431,7610,"SELECT account.account_id
+FROM account
+JOIN trans ON account.account_id = trans.account_id
+WHERE STRFTIME('%Y', trans.date) = '1995'
+ORDER BY trans.date ASC
+LIMIT 1","SELECT account_id FROM trans WHERE STRFTIME('%Y', date) = '1995' ORDER BY date ASC LIMIT 1",List out the accounts who have the earliest trading date in 1995 ?
+102,simple,text_to_sql,False,,1603,2436,"SELECT DISTINCT account.account_id
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE account.date < '1997-01-01' AND loan.amount > 3000","SELECT DISTINCT T2.account_id FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T2.date) < '1997' AND T1.amount > 3000",State different accounts who have account opening date before 1997 and own an amount of money greater than 3000USD
+102,simple,semantic_layer,False,,1389,7658,"SELECT DISTINCT account.account_id
+FROM account
+JOIN loan ON account.account_id = loan.account_id
+WHERE account.date < '1997-01-01' AND loan.amount > 3000","SELECT DISTINCT T2.account_id FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T2.date) < '1997' AND T1.amount > 3000",State different accounts who have account opening date before 1997 and own an amount of money greater than 3000USD
+103,simple,text_to_sql,True,,1144,2391,"SELECT disp.client_id
+   FROM disp
+   JOIN card ON disp.disp_id = card.disp_id
+   WHERE card.issued = '1994-03-03'",SELECT T2.client_id FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T2.disp_id = T3.disp_id WHERE T3.issued = '1994-03-03',"Which client issued his/her card in 1994/3/3, give his/her client id."
+103,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT card.client_id
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE card.issued = '1994-03-03'': no such column: card.client_id",1847,7613,"SELECT card.client_id
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE card.issued = '1994-03-03'",SELECT T2.client_id FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T2.disp_id = T3.disp_id WHERE T3.issued = '1994-03-03',"Which client issued his/her card in 1994/3/3, give his/her client id."
+104,simple,text_to_sql,True,,3350,2402,"SELECT account.date
+   FROM account
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.amount = 840 AND trans.date = '1998-10-14'",SELECT T1.date FROM account AS T1 INNER JOIN trans AS T2 ON T1.account_id = T2.account_id WHERE T2.amount = 840 AND T2.date = '1998-10-14',"The transaction of 840 USD happened in 1998/10/14, when was this account opened?"
+104,simple,semantic_layer,True,,2246,7624,"SELECT account.date
+   FROM account
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.amount = 840 AND trans.date = '1998-10-14'",SELECT T1.date FROM account AS T1 INNER JOIN trans AS T2 ON T1.account_id = T2.account_id WHERE T2.amount = 840 AND T2.date = '1998-10-14',"The transaction of 840 USD happened in 1998/10/14, when was this account opened?"
+105,simple,text_to_sql,True,,1380,2428,"SELECT account.district_id
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   WHERE loan.date = '1994-08-25'",SELECT T1.district_id FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.date = '1994-08-25',"There was a loan approved in 1994/8/25, where was that account opened, give the district Id of the branch."
+105,simple,semantic_layer,True,,1280,7650,"SELECT account.district_id 
+FROM loan 
+JOIN account ON loan.account_id = account.account_id 
+WHERE loan.date = '1994-08-25'",SELECT T1.district_id FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.date = '1994-08-25',"There was a loan approved in 1994/8/25, where was that account opened, give the district Id of the branch."
+106,simple,text_to_sql,False,,1091,2421,"SELECT MAX(trans.amount)
+   FROM trans
+   JOIN card ON trans.account_id = card.disp_id
+   WHERE card.issued = '1996-10-21'",SELECT T4.amount FROM card AS T1 JOIN disp AS T2 ON T1.disp_id = T2.disp_id JOIN account AS T3 on T2.account_id = T3.account_id JOIN trans AS T4 on T3.account_id = T4.account_id WHERE T1.issued = '1996-10-21' ORDER BY T4.amount DESC LIMIT 1,What is the biggest amount of transaction that the client whose card was opened in 1996/10/21 made?
+106,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT MAX(trans.amount)
+   FROM trans
+   JOIN card ON trans.account_id = card.account_id
+   WHERE card.issued = '1996-10-21'': no such column: card.account_id",1334,7643,"SELECT MAX(trans.amount)
+   FROM trans
+   JOIN card ON trans.account_id = card.account_id
+   WHERE card.issued = '1996-10-21'",SELECT T4.amount FROM card AS T1 JOIN disp AS T2 ON T1.disp_id = T2.disp_id JOIN account AS T3 on T2.account_id = T3.account_id JOIN trans AS T4 on T3.account_id = T4.account_id WHERE T1.issued = '1996-10-21' ORDER BY T4.amount DESC LIMIT 1,What is the biggest amount of transaction that the client whose card was opened in 1996/10/21 made?
+107,simple,text_to_sql,False,,2846,2489,"SELECT client.gender
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE account.account_id IN (
+      SELECT account.account_id
+      FROM account
+      JOIN disp ON account.account_id = disp.account_id
+      JOIN district ON disp.account_id = district.district_id
+      GROUP BY district.district_id
+      ORDER BY AVG(district.A11) DESC
+      LIMIT 1
+   )
+   ORDER BY client.birth_date ASC
+   LIMIT 1","SELECT T2.gender FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id ORDER BY T1.A11 DESC, T2.birth_date ASC LIMIT 1",What is the gender of the oldest client who opened his/her account in the highest average salary branch?
+107,simple,semantic_layer,False,,2515,7711,"SELECT client.gender
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   JOIN account ON client.district_id = account.district_id
+   WHERE account.date = (
+       SELECT MIN(account.date)
+       FROM account
+       JOIN district ON account.district_id = district.district_id
+       WHERE district.A11 = (
+           SELECT MAX(district.A11)
+           FROM district
+       )
+   )
+LIMIT 1","SELECT T2.gender FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id ORDER BY T1.A11 DESC, T2.birth_date ASC LIMIT 1",What is the gender of the oldest client who opened his/her account in the highest average salary branch?
+108,simple,text_to_sql,False,,1405,2437,"SELECT MIN(trans.amount)
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.amount = (SELECT MAX(loan.amount) FROM loan) 
+     AND trans.date > account.date
+   GROUP BY trans.account_id","SELECT T3.amount FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id ORDER BY T1.amount DESC, T3.date ASC LIMIT 1","For the client who applied the biggest loan, what was his/her first amount of transaction after opened the account?"
+108,simple,semantic_layer,False,,1921,7659,"SELECT MIN(trans.amount)
+FROM trans
+JOIN account ON trans.account_id = account.account_id
+JOIN loan ON account.account_id = loan.account_id
+WHERE loan.amount = (SELECT MAX(amount) FROM loan) 
+AND trans.date > account.date","SELECT T3.amount FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id ORDER BY T1.amount DESC, T3.date ASC LIMIT 1","For the client who applied the biggest loan, what was his/her first amount of transaction after opened the account?"
+109,simple,text_to_sql,True,,1595,2477,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F' AND district.A2 = 'Jesenik'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A2 = 'Jesenik',How many clients opened their accounts in Jesenik branch were women?
+109,simple,semantic_layer,True,,1737,7699,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN account ON client.district_id = account.district_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE client.gender = 'F' AND district.A2 = 'Jesenik'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A2 = 'Jesenik',How many clients opened their accounts in Jesenik branch were women?
+110,simple,text_to_sql,False,,1199,2405,"SELECT disp.disp_id
+   FROM trans
+   JOIN disp ON trans.account_id = disp.account_id
+   WHERE trans.amount = 5100 AND trans.date = '1998-09-02'",SELECT T1.disp_id FROM disp AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.date='1997-08-20' AND T3.amount = 5100,What is the disposition id of the client who made 5100 USD transaction in 1998/9/2?
+110,simple,semantic_layer,False,,2079,7627,"SELECT disp.disp_id
+   FROM disp
+   JOIN account ON disp.account_id = account.account_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.amount = 5100 AND trans.date = '1998-09-02'",SELECT T1.disp_id FROM disp AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.date='1997-08-20' AND T3.amount = 5100,What is the disposition id of the client who made 5100 USD transaction in 1998/9/2?
+111,simple,text_to_sql,True,,1124,2434,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Litomerice' AND strftime('%Y', account.date) = '1996'","SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) = '1996' AND T1.A2 = 'Litomerice'",How many accounts were opened in Litomerice in 1996?
+111,simple,semantic_layer,True,,1647,7656,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Litomerice' AND STRFTIME('%Y', account.date) = '1996'","SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) = '1996' AND T1.A2 = 'Litomerice'",How many accounts were opened in Litomerice in 1996?
+112,simple,text_to_sql,True,,1611,2467,"SELECT district.A2
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F' AND client.birth_date = '1976-01-29'",SELECT T1.A2 FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T2.birth_date = '1976-01-29' AND T2.gender = 'F',"For the female client who was born in 1976/1/29, which district did she opened her account?"
+112,simple,semantic_layer,True,,1858,7689,"SELECT district.A2
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   JOIN account ON client.client_id = account.account_id
+   WHERE client.gender = 'F' AND client.birth_date = '1976-01-29'",SELECT T1.A2 FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T2.birth_date = '1976-01-29' AND T2.gender = 'F',"For the female client who was born in 1976/1/29, which district did she opened her account?"
+113,simple,text_to_sql,False,,1410,2403,"SELECT client.birth_date
+   FROM client
+   JOIN loan ON client.client_id = loan.account_id
+   WHERE loan.amount = 98832 AND loan.date = '1996-01-03'",SELECT T4.birth_date FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T1.date = '1996-01-03' AND T1.amount = 98832,"For the client who applied 98832 USD loan in 1996/1/3, when was his/her birthday?"
+113,simple,semantic_layer,False,,2002,7625,"SELECT client.birth_date
+   FROM client
+   JOIN loan ON client.client_id = loan.account_id
+   WHERE loan.amount = 98832 AND loan.date = '1996-01-03'",SELECT T4.birth_date FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id INNER JOIN client AS T4 ON T3.client_id = T4.client_id WHERE T1.date = '1996-01-03' AND T1.amount = 98832,"For the client who applied 98832 USD loan in 1996/1/3, when was his/her birthday?"
+114,simple,text_to_sql,True,,1448,2430,"SELECT account.account_id
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE district.A3 = 'Prague'
+   ORDER BY account.date
+   LIMIT 1",SELECT T1.account_id FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A3 = 'Prague' ORDER BY T1.date ASC LIMIT 1,"For the first client who opened his/her account in Prague, what is his/her account ID?"
+114,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT account.account_id
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN client ON account.account_id = client.account_id
+   WHERE district.A3 = 'Prague'
+   ORDER BY account.date
+   LIMIT 1': no such column: client.account_id",1911,7652,"SELECT account.account_id
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN client ON account.account_id = client.account_id
+   WHERE district.A3 = 'Prague'
+   ORDER BY account.date
+   LIMIT 1",SELECT T1.account_id FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A3 = 'Prague' ORDER BY T1.date ASC LIMIT 1,"For the first client who opened his/her account in Prague, what is his/her account ID?"
+115,challenging,text_to_sql,False,,1838,2629,"SELECT (COUNT(CASE WHEN client.gender = 'M' THEN 1 END) * 100.0 / COUNT(client.client_id)) AS male_percentage
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE district.A3 = 'South Bohemia'
+   GROUP BY district.A4
+   HAVING district.A4 = (SELECT MAX(A4) FROM district WHERE A3 = 'South Bohemia')",SELECT CAST(SUM(T1.gender = 'M') AS REAL) * 100 / COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A3 = 'south Bohemia' GROUP BY T2.A4 ORDER BY T2.A4 DESC LIMIT 1,"For the branch which located in the south Bohemia with biggest number of inhabitants, what is the percentage of the male clients?"
+115,challenging,semantic_layer,False,,2379,7851,"SELECT (COUNT(CASE WHEN client.gender = 'M' THEN 1 END) * 100.0 / COUNT(client.client_id)) AS male_percentage
+FROM client
+JOIN district ON client.district_id = district.district_id
+WHERE district.A3 = 'South Bohemia'
+AND district.A4 = (SELECT MAX(A4) FROM district WHERE A3 = 'South Bohemia')",SELECT CAST(SUM(T1.gender = 'M') AS REAL) * 100 / COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A3 = 'south Bohemia' GROUP BY T2.A4 ORDER BY T2.A4 DESC LIMIT 1,"For the branch which located in the south Bohemia with biggest number of inhabitants, what is the percentage of the male clients?"
+116,challenging,text_to_sql,False,,3463,2569,"SELECT ((balance_A - balance_B) / balance_B) * 100 AS increase_rate
+FROM (
+    SELECT trans.balance AS balance_A
+    FROM trans
+    JOIN loan ON trans.account_id = loan.account_id
+    WHERE loan.date = (SELECT MIN(loan.date)
+                       FROM loan
+                       WHERE loan.date >= '1993-07-05' AND loan.date < '1993-07-06')
+    AND trans.date = '1993-03-22'
+) AS A,
+(
+    SELECT trans.balance AS balance_B
+    FROM trans
+    JOIN loan ON trans.account_id = loan.account_id
+    WHERE loan.date = (SELECT MIN(loan.date)
+                       FROM loan
+                       WHERE loan.date >= '1993-07-05' AND loan.date < '1993-07-06')
+    AND trans.date = '1998-12-27'
+) AS B","SELECT CAST((SUM(IIF(T3.date = '1998-12-27', T3.balance, 0)) - SUM(IIF(T3.date = '1993-03-22', T3.balance, 0))) AS REAL) * 100 / SUM(IIF(T3.date = '1993-03-22', T3.balance, 0)) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN trans AS T3 ON T3.account_id = T2.account_id WHERE T1.date = '1993-07-05'","For the client whose loan was approved first in 1993/7/5, what is the increase rate of his/her account balance from 1993/3/22 to 1998/12/27?"
+116,challenging,semantic_layer,False,,4542,7791,"SELECT ((balance_A - balance_B) / balance_B) * 100 AS increase_rate
+FROM (
+    SELECT 
+        trans_A.account_id,
+        trans_A.balance AS balance_A,
+        trans_B.balance AS balance_B
+    FROM trans AS trans_A
+    JOIN trans AS trans_B ON trans_A.account_id = trans_B.account_id
+    WHERE trans_A.date = '1998-12-27' AND trans_B.date = '1993-03-22'
+    AND trans_A.account_id = (
+        SELECT loan.account_id
+        FROM loan
+        WHERE loan.date = (
+            SELECT MIN(loan.date)
+            FROM loan
+            WHERE loan.date >= '1993-07-05'
+        )
+    )
+) AS balances;","SELECT CAST((SUM(IIF(T3.date = '1998-12-27', T3.balance, 0)) - SUM(IIF(T3.date = '1993-03-22', T3.balance, 0))) AS REAL) * 100 / SUM(IIF(T3.date = '1993-03-22', T3.balance, 0)) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN trans AS T3 ON T3.account_id = T2.account_id WHERE T1.date = '1993-07-05'","For the client whose loan was approved first in 1993/7/5, what is the increase rate of his/her account balance from 1993/3/22 to 1998/12/27?"
+117,moderate,text_to_sql,False,,1288,2599,"SELECT (SUM(loan.amount) / (SELECT SUM(amount) FROM loan) * 100) AS percentage_fully_paid
+   FROM loan
+   WHERE loan.status = 'A'",SELECT (CAST(SUM(CASE WHEN status = 'A' THEN amount ELSE 0 END) AS REAL) * 100) / SUM(amount) FROM loan,What is the percentage of loan amount that has been fully paid with no issue.
+117,moderate,semantic_layer,True,,1400,7821,"SELECT (SUM(loan.amount) * 100.0 / (SELECT SUM(amount) FROM loan)) AS percentage_fully_paid
+FROM loan
+WHERE loan.status = 'A'",SELECT (CAST(SUM(CASE WHEN status = 'A' THEN amount ELSE 0 END) AS REAL) * 100) / SUM(amount) FROM loan,What is the percentage of loan amount that has been fully paid with no issue.
+118,moderate,text_to_sql,True,,1890,2571,"SELECT (COUNT(DISTINCT loan.account_id) * 100.0 / (SELECT COUNT(DISTINCT loan.account_id) FROM loan WHERE loan.amount < 100000)) AS percentage
+   FROM loan
+   WHERE loan.amount < 100000 AND loan.status = 'C'",SELECT CAST(SUM(status = 'C') AS REAL) * 100 / COUNT(account_id) FROM loan WHERE amount < 100000,"For loan amount less than USD100,000, what is the percentage of accounts that is still running with no issue."
+118,moderate,semantic_layer,True,,1377,7793,"SELECT (COUNT(CASE WHEN loan.status = 'C' THEN loan.account_id END) * 100.0 / COUNT(loan.account_id)) AS percentage_running_accounts
+FROM loan
+WHERE loan.amount < 100000;",SELECT CAST(SUM(status = 'C') AS REAL) * 100 / COUNT(account_id) FROM loan WHERE amount < 100000,"For loan amount less than USD100,000, what is the percentage of accounts that is still running with no issue."
+119,moderate,text_to_sql,False,"Generated SQL error: Execution failed on sql 'SELECT account.account_id, district.A2, district.A3
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN card ON account.account_id = card.account_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE account.date BETWEEN '1993-01-01' AND '1993-12-31'
+     AND card.type = 'POPLATEK PO OBRATU'
+     AND trans.date < card.issued': no such column: card.account_id",1933,2587,"SELECT account.account_id, district.A2, district.A3
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN card ON account.account_id = card.account_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE account.date BETWEEN '1993-01-01' AND '1993-12-31'
+     AND card.type = 'POPLATEK PO OBRATU'
+     AND trans.date < card.issued","SELECT T1.account_id, T2.A2, T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.frequency = 'POPLATEK PO OBRATU' AND STRFTIME('%Y', T1.date)= '1993'","For accounts in 1993 with statement issued after transaction, list the account ID, district name and district region."
+119,moderate,semantic_layer,True,,2646,7809,"SELECT account.account_id, district.A2, district.A3
+FROM account
+JOIN district ON account.district_id = district.district_id
+WHERE STRFTIME('%Y', account.date) = '1993' AND account.frequency = 'POPLATEK PO OBRATU'","SELECT T1.account_id, T2.A2, T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.frequency = 'POPLATEK PO OBRATU' AND STRFTIME('%Y', T1.date)= '1993'","For accounts in 1993 with statement issued after transaction, list the account ID, district name and district region."
+120,moderate,text_to_sql,False,,1927,2507,"SELECT account.account_id, account.frequency
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE district.A4 = 'east Bohemia' AND account.date BETWEEN '1995-01-01' AND '2000-12-31'","SELECT T1.account_id, T1.frequency FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A3 = 'east Bohemia' AND STRFTIME('%Y', T1.date) BETWEEN '1995' AND '2000'","From Year 1995 to 2000, who are the accounts holders from 'east Bohemia'. State the account ID the frequency of statement issuance."
+120,moderate,semantic_layer,False,,3023,7729,"SELECT account.account_id, account.frequency
+FROM account
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+JOIN district ON client.district_id = district.district_id
+JOIN loan ON account.account_id = loan.account_id
+WHERE district.A3 = 'east Bohemia' AND STRFTIME('%Y', loan.date) BETWEEN '1995' AND '2000'","SELECT T1.account_id, T1.frequency FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A3 = 'east Bohemia' AND STRFTIME('%Y', T1.date) BETWEEN '1995' AND '2000'","From Year 1995 to 2000, who are the accounts holders from 'east Bohemia'. State the account ID the frequency of statement issuance."
+121,simple,text_to_sql,True,,1488,2426,"SELECT account.account_id, account.date
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Prachatice'","SELECT T1.account_id, T1.date FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A2 = 'Prachatice'",List account ID and account opening date for accounts from 'Prachatice'.
+121,simple,semantic_layer,True,,1484,7648,"SELECT account.account_id, account.date
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Prachatice'","SELECT T1.account_id, T1.date FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A2 = 'Prachatice'",List account ID and account opening date for accounts from 'Prachatice'.
+122,simple,text_to_sql,True,,1286,2438,"SELECT district.A2, district.A3
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.loan_id = 4990","SELECT T2.A2, T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.loan_id = 4990",State the district and region for loan ID '4990'.
+122,simple,semantic_layer,True,,1537,7660,"SELECT district.A2, district.A3
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.loan_id = '4990'","SELECT T2.A2, T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.loan_id = 4990",State the district and region for loan ID '4990'.
+123,simple,text_to_sql,True,,1014,2458,"SELECT account.account_id, district.A2, district.A3
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.amount > 300000","SELECT T1.account_id, T2.A2, T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.amount > 300000","Provide the account ID, district and region for loan amount greater than USD300,000."
+123,simple,semantic_layer,True,,1602,7680,"SELECT account.account_id, district.A2, district.A3
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.amount > 300000","SELECT T1.account_id, T2.A2, T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.amount > 300000","Provide the account ID, district and region for loan amount greater than USD300,000."
+124,simple,text_to_sql,False,,1191,2450,"SELECT loan.loan_id, district.A3, district.A11
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.duration = 60","SELECT T3.loan_id, T2.A2, T2.A11 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.duration = 60","List the loan ID, district and average salary for loan with duration of 60 months."
+124,simple,semantic_layer,False,,1742,7672,"SELECT loan.loan_id, district.A2, AVG(district.A11)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.duration = 60
+   GROUP BY loan.loan_id, district.A2","SELECT T3.loan_id, T2.A2, T2.A11 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.duration = 60","List the loan ID, district and average salary for loan with duration of 60 months."
+125,challenging,text_to_sql,False,,1828,2803,"SELECT district.district_id, ((district.A13 - district.A12) / district.A12) * 100 AS unemployment_increment_rate
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE loan.status = 'D'",SELECT CAST((T3.A13 - T3.A12) AS REAL) * 100 / T3.A12 FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T2.district_id = T3.district_id WHERE T1.status = 'D',"For loans contracts which are still running where client are in debt, list the district of the and the state the percentage unemployment rate increment from year 1995 to 1996."
+125,challenging,semantic_layer,False,,2251,8025,"SELECT district.A3, 
+       ((district.A13 - district.A12) / district.A12) * 100 AS unemployment_increment_rate
+FROM loan
+JOIN account ON loan.account_id = account.account_id
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+JOIN district ON account.district_id = district.district_id
+WHERE loan.status = 'D'",SELECT CAST((T3.A13 - T3.A12) AS REAL) * 100 / T3.A12 FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T2.district_id = T3.district_id WHERE T1.status = 'D',"For loans contracts which are still running where client are in debt, list the district of the and the state the percentage unemployment rate increment from year 1995 to 1996."
+126,simple,text_to_sql,True,,1455,2455,"SELECT (COUNT(account.account_id) * 100.0 / (SELECT COUNT(*) FROM account WHERE date LIKE '1993%')) AS percentage
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Decin' AND account.date LIKE '1993%'","SELECT CAST(SUM(T1.A2 = 'Decin') AS REAL) * 100 / COUNT(account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) = '1993'",Calculate the percentage of account from 'Decin' district for all accounts are opened in 1993.
+126,simple,semantic_layer,True,,2774,7677,"SELECT COUNT(account.account_id) * 100.0 / (SELECT COUNT(*) FROM account WHERE STRFTIME('%Y', date) = '1993') AS percentage
+FROM account
+JOIN district ON account.district_id = district.district_id
+WHERE district.A2 = 'Decin' AND STRFTIME('%Y', date) = '1993'","SELECT CAST(SUM(T1.A2 = 'Decin') AS REAL) * 100 / COUNT(account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) = '1993'",Calculate the percentage of account from 'Decin' district for all accounts are opened in 1993.
+127,simple,text_to_sql,False,,1291,2421,"SELECT DISTINCT account.account_id
+   FROM account
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.operation = 'POPLATEK MESICNE'",SELECT account_id FROM account WHERE Frequency = 'POPLATEK MESICNE',List the account IDs with monthly issuance of statements.
+127,simple,semantic_layer,True,,1239,7643,"SELECT account.account_id
+   FROM account
+   WHERE account.frequency = 'POPLATEK MESICNE'",SELECT account_id FROM account WHERE Frequency = 'POPLATEK MESICNE',List the account IDs with monthly issuance of statements.
+128,moderate,text_to_sql,True,,1717,2490,"SELECT district.A2, COUNT(DISTINCT client.client_id) AS female_account_holders
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   WHERE client.gender = 'F'
+   GROUP BY district.A2
+   ORDER BY female_account_holders DESC
+   LIMIT 9","SELECT T2.A2, COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' GROUP BY T2.district_id, T2.A2 ORDER BY COUNT(T1.client_id) DESC LIMIT 9","List the top nine districts, by descending order, from the highest to the lowest, the number of female account holders."
+128,moderate,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT district.A2, COUNT(DISTINCT disp.client_id) AS female_account_holders
+FROM disp
+JOIN client ON disp.client_id = client.client_id
+JOIN account ON disp.account_id = account.account_id
+WHERE client.gender = 'F'
+GROUP BY district.A2
+ORDER BY female_account_holders DESC
+LIMIT 9': no such column: district.A2",2988,7712,"SELECT district.A2, COUNT(DISTINCT disp.client_id) AS female_account_holders
+FROM disp
+JOIN client ON disp.client_id = client.client_id
+JOIN account ON disp.account_id = account.account_id
+WHERE client.gender = 'F'
+GROUP BY district.A2
+ORDER BY female_account_holders DESC
+LIMIT 9","SELECT T2.A2, COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' GROUP BY T2.district_id, T2.A2 ORDER BY COUNT(T1.client_id) DESC LIMIT 9","List the top nine districts, by descending order, from the highest to the lowest, the number of female account holders."
+129,moderate,text_to_sql,False,,1808,2560,"SELECT district.A2, SUM(trans.amount) AS total_withdrawals
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE trans.type = 'VYDAJ' AND trans.date LIKE '1996-01%'
+   GROUP BY district.A2
+   ORDER BY total_withdrawals DESC
+   LIMIT 10",SELECT DISTINCT T1.A2 FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.type = 'VYDAJ' AND T3.date LIKE '1996-01%' ORDER BY A2 ASC LIMIT 10,Which are the top ten withdrawals (non-credit card) by district names for the month of January 1996?
+129,moderate,semantic_layer,False,,2546,7782,"SELECT district.A2, SUM(trans.amount) AS total_withdrawals
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE trans.type = 'VYDAJ' AND trans.date LIKE '1996-01%'
+   GROUP BY district.A2
+   ORDER BY total_withdrawals DESC
+   LIMIT 10",SELECT DISTINCT T1.A2 FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.type = 'VYDAJ' AND T3.date LIKE '1996-01%' ORDER BY A2 ASC LIMIT 10,Which are the top ten withdrawals (non-credit card) by district names for the month of January 1996?
+130,moderate,text_to_sql,False,,1580,2464,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   LEFT JOIN disp ON account.account_id = disp.account_id AND disp.type = 'credit'
+   WHERE district.A3 = 'South Bohemia' AND disp.account_id IS NULL",SELECT COUNT(T3.account_id) FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.client_id = T3.client_id WHERE T1.A3 = 'south Bohemia' AND T3.type != 'OWNER',How many of the account holders in South Bohemia still do not own credit cards?
+130,moderate,semantic_layer,False,,2476,7686,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   LEFT JOIN disp ON account.account_id = disp.account_id
+   WHERE district.A3 = 'South Bohemia' AND disp.account_id IS NULL",SELECT COUNT(T3.account_id) FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.client_id = T3.client_id WHERE T1.A3 = 'south Bohemia' AND T3.type != 'OWNER',How many of the account holders in South Bohemia still do not own credit cards?
+131,moderate,text_to_sql,False,,1845,2536,"SELECT district.A3, COUNT(loan.loan_id) AS active_loans
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.status IN ('C', 'D')
+   GROUP BY district.A3
+   ORDER BY active_loans DESC
+   LIMIT 1","SELECT T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.status IN ('C', 'D') GROUP BY T2.A3 ORDER BY SUM(T3.amount) DESC LIMIT 1",Which district has highest active loan?
+131,moderate,semantic_layer,False,,2063,7758,"SELECT district.A3, COUNT(loan.loan_id) AS active_loan_count
+FROM district
+JOIN account ON district.district_id = account.district_id
+JOIN loan ON account.account_id = loan.account_id
+WHERE loan.status = 'C'
+GROUP BY district.A3
+ORDER BY active_loan_count DESC
+LIMIT 1","SELECT T2.A3 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T3.status IN ('C', 'D') GROUP BY T2.A3 ORDER BY SUM(T3.amount) DESC LIMIT 1",Which district has highest active loan?
+132,simple,text_to_sql,True,,1541,2395,"SELECT AVG(loan.amount)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE client.gender = 'M'",SELECT AVG(T4.amount) FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN loan AS T4 ON T3.account_id = T4.account_id WHERE T1.gender = 'M',What is the average loan amount by male borrowers?
+132,simple,semantic_layer,True,,1667,7617,"SELECT AVG(loan.amount)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE client.gender = 'M'",SELECT AVG(T4.amount) FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN loan AS T4 ON T3.account_id = T4.account_id WHERE T1.gender = 'M',What is the average loan amount by male borrowers?
+133,simple,text_to_sql,False,,1030,2492,"SELECT district.A2, district.A13
+   FROM district
+   WHERE district.A13 IS NOT NULL
+   ORDER BY district.A13 DESC
+   LIMIT 1","SELECT district_id, A2 FROM district ORDER BY A13 DESC LIMIT 1","In 1996, which districts have the highest unemployment rate? List their branch location and district name."
+133,simple,semantic_layer,False,,1285,7714,"SELECT district.A3, district.A2
+FROM district
+ORDER BY district.A13 DESC
+LIMIT 10","SELECT district_id, A2 FROM district ORDER BY A13 DESC LIMIT 1","In 1996, which districts have the highest unemployment rate? List their branch location and district name."
+134,simple,text_to_sql,True,,1234,2464,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A16 = (
+       SELECT MAX(A16) 
+       FROM district 
+       WHERE A16 IS NOT NULL
+   )",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id GROUP BY T1.A16 ORDER BY T1.A16 DESC LIMIT 1,"In the branch where the largest number of crimes were committed in 1996, how many accounts were opened?"
+134,simple,semantic_layer,True,,1963,7686,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.district_id = (SELECT district.district_id
+                                  FROM district
+                                  ORDER BY district.A16 DESC
+                                  LIMIT 1)",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id GROUP BY T1.A16 ORDER BY T1.A16 DESC LIMIT 1,"In the branch where the largest number of crimes were committed in 1996, how many accounts were opened?"
+135,moderate,text_to_sql,False,,1120,2576,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.balance < 0 AND trans.operation = 'VYBER KARTOU' AND account.frequency = 'POPLATEK MESICNE'",SELECT COUNT(T1.account_id) FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE T1.balance < 0 AND T1.operation = 'VYBER KARTOU' AND T2.frequency = 'POPLATEK MESICNE',"After making a credit card withdrawal, how many account/s with monthly issuance has a negative balance?"
+135,moderate,semantic_layer,False,,1284,7798,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.operation = 'VYBER KARTOU' AND trans.balance < 0 AND account.frequency = 'POPLATEK MESICNE'",SELECT COUNT(T1.account_id) FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE T1.balance < 0 AND T1.operation = 'VYBER KARTOU' AND T2.frequency = 'POPLATEK MESICNE',"After making a credit card withdrawal, how many account/s with monthly issuance has a negative balance?"
+136,moderate,text_to_sql,True,,1659,2523,"SELECT COUNT(loan.loan_id)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   WHERE loan.amount >= 250000 AND account.frequency = 'POPLATEK MESICNE' AND loan.date BETWEEN '1995-01-01' AND '1997-12-31'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.date BETWEEN '1995-01-01' AND '1997-12-31' AND T1.frequency = 'POPLATEK MESICNE' AND T2.amount >= 250000,"Between 1/1/1995 and 12/31/1997, how many loans in the amount of at least 250,000 per account that chose monthly statement issuance were approved?"
+136,moderate,semantic_layer,True,,2369,7745,"SELECT COUNT(loan.loan_id)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   WHERE loan.amount >= 250000 
+     AND loan.date BETWEEN '1995-01-01' AND '1997-12-31' 
+     AND account.frequency = 'POPLATEK MESICNE'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.date BETWEEN '1995-01-01' AND '1997-12-31' AND T1.frequency = 'POPLATEK MESICNE' AND T2.amount >= 250000,"Between 1/1/1995 and 12/31/1997, how many loans in the amount of at least 250,000 per account that chose monthly statement issuance were approved?"
+137,moderate,text_to_sql,False,,1345,2489,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE loan.status IN ('C', 'D') AND district.A8 = 1",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T1.district_id = 1 AND (T3.status = 'C' OR T3.status = 'D'),How many accounts have running contracts in Branch location 1?
+137,moderate,semantic_layer,True,,1844,7711,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.district_id = 1 AND loan.status IN ('C', 'D')",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN loan AS T3 ON T1.account_id = T3.account_id WHERE T1.district_id = 1 AND (T3.status = 'C' OR T3.status = 'D'),How many accounts have running contracts in Branch location 1?
+138,moderate,text_to_sql,True,,2380,2510,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'M' AND district.A15 = (
+       SELECT DISTINCT district_sub.A15
+       FROM district AS district_sub
+       ORDER BY district_sub.A15 DESC
+       LIMIT 1 OFFSET 1
+   )","SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A15 = (SELECT T3.A15 FROM district AS T3 ORDER BY T3.A15 DESC LIMIT 1, 1)","In the branch where the second-highest number of crimes were committed in 1995 occurred, how many male clients are there?"
+138,moderate,semantic_layer,True,,3041,7732,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE district.district_id = (
+     SELECT district_id
+     FROM district
+     ORDER BY A15 DESC
+     LIMIT 1 OFFSET 1
+   )
+   AND client.gender = 'M'","SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A15 = (SELECT T3.A15 FROM district AS T3 ORDER BY T3.A15 DESC LIMIT 1, 1)","In the branch where the second-highest number of crimes were committed in 1995 occurred, how many male clients are there?"
+139,simple,text_to_sql,True,,1730,2447,"SELECT COUNT(card.card_id)
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   WHERE card.type = 'gold' AND disp.type = 'OWNER'",SELECT COUNT(T1.card_id) FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id WHERE T1.type = 'gold' AND T2.type = 'OWNER',"How many high-level credit cards have ""OWNER"" type of disposition?"
+139,simple,semantic_layer,True,,2255,7669,"SELECT COUNT(card.card_id)
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   WHERE card.type = 'gold' AND disp.type = 'OWNER'",SELECT COUNT(T1.card_id) FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id WHERE T1.type = 'gold' AND T2.type = 'OWNER',"How many high-level credit cards have ""OWNER"" type of disposition?"
+140,simple,text_to_sql,True,,1052,2399,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Pisek'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A2 = 'Pisek',"How many accounts are there in the district of ""Pisek""?"
+140,simple,semantic_layer,True,,1472,7621,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Pisek'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T2.A2 = 'Pisek',"How many accounts are there in the district of ""Pisek""?"
+141,simple,text_to_sql,True,,1626,2388,"SELECT district.district_id
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE trans.date BETWEEN '1997-01-01' AND '1997-12-31'
+   GROUP BY district.district_id
+   HAVING SUM(trans.amount) > 10000","SELECT T1.district_id FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T1.account_id = T3.account_id WHERE STRFTIME('%Y', T3.date) = '1997' GROUP BY T1.district_id HAVING SUM(T3.amount) > 10000","Which districts have transactions greater than USS$10,000 in 1997?"
+141,simple,semantic_layer,False,,2168,7610,"SELECT district.district_id, district.A2
+   FROM district
+   JOIN account ON district.district_id = account.district_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.amount > 10000 AND STRFTIME('%Y', trans.date) = '1997'
+   GROUP BY district.district_id, district.A2
+   HAVING SUM(trans.amount) > 10000","SELECT T1.district_id FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T1.account_id = T3.account_id WHERE STRFTIME('%Y', T3.date) = '1997' GROUP BY T1.district_id HAVING SUM(T3.amount) > 10000","Which districts have transactions greater than USS$10,000 in 1997?"
+142,simple,text_to_sql,False,"Generated SQL error: Execution failed on sql 'SELECT DISTINCT account.account_id
+   FROM account
+   JOIN order ON account.account_id = order.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE order.k_symbol = 'SIPO' AND district.A3 = 'Pisek'': near ""order"": syntax error",1853,2423,"SELECT DISTINCT account.account_id
+   FROM account
+   JOIN order ON account.account_id = order.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE order.k_symbol = 'SIPO' AND district.A3 = 'Pisek'",SELECT DISTINCT T2.account_id FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T2.district_id = T3.district_id WHERE T1.k_symbol = 'SIPO' AND T3.A2 = 'Pisek',Which accounts placed orders for household payment in Pisek?
+142,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT DISTINCT account.account_id
+   FROM account
+   JOIN order ON account.account_id = order.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE order.k_symbol = 'SIPO' AND district.A2 = 'Pisek'': near ""order"": syntax error",2283,7645,"SELECT DISTINCT account.account_id
+   FROM account
+   JOIN order ON account.account_id = order.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE order.k_symbol = 'SIPO' AND district.A2 = 'Pisek'",SELECT DISTINCT T2.account_id FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T2.district_id = T3.district_id WHERE T1.k_symbol = 'SIPO' AND T3.A2 = 'Pisek',Which accounts placed orders for household payment in Pisek?
+143,simple,text_to_sql,True,,1800,2372,"SELECT account.account_id
+   FROM account
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN card ON disp.disp_id = card.disp_id
+   WHERE card.type = 'gold'",SELECT T2.account_id FROM disp AS T2  INNER JOIN card AS T1 ON T1.disp_id = T2.disp_id  WHERE T1.type = 'gold',What are the accounts that have gold credit cards?
+143,simple,semantic_layer,True,,1812,7594,"SELECT DISTINCT account.account_id
+FROM account
+JOIN disp ON account.account_id = disp.account_id
+JOIN card ON disp.disp_id = card.disp_id
+WHERE card.type = 'gold'",SELECT T2.account_id FROM disp AS T2  INNER JOIN card AS T1 ON T1.disp_id = T2.disp_id  WHERE T1.type = 'gold',What are the accounts that have gold credit cards?
+144,moderate,text_to_sql,False,,1482,2471,"SELECT AVG(trans.amount)
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   WHERE trans.operation = 'VYBER KARTOU' AND strftime('%Y', trans.date) = '2021'
+   GROUP BY strftime('%m', trans.date)","SELECT AVG(T4.amount) FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN trans AS T4 ON T3.account_id = T4.account_id WHERE STRFTIME('%Y', T4.date) = '1998' AND T4.operation = 'VYBER KARTOU'","How much is the average amount in credit card made by account holders in a month, in year 2021?"
+144,moderate,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT AVG(trans.amount)
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN card ON account.account_id = card.account_id
+   WHERE trans.type = 'VYBER KARTOU' AND STRFTIME('%Y', trans.date) = '2021'
+   GROUP BY STRFTIME('%m', trans.date)': no such column: card.account_id",2369,7693,"SELECT AVG(trans.amount)
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN card ON account.account_id = card.account_id
+   WHERE trans.type = 'VYBER KARTOU' AND STRFTIME('%Y', trans.date) = '2021'
+   GROUP BY STRFTIME('%m', trans.date)","SELECT AVG(T4.amount) FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN trans AS T4 ON T3.account_id = T4.account_id WHERE STRFTIME('%Y', T4.date) = '1998' AND T4.operation = 'VYBER KARTOU'","How much is the average amount in credit card made by account holders in a month, in year 2021?"
+145,moderate,text_to_sql,False,,2107,2524,"SELECT DISTINCT disp.client_id
+   FROM disp
+   JOIN card ON disp.disp_id = card.disp_id
+   JOIN trans ON disp.account_id = trans.account_id
+   WHERE trans.operation = 'VYBER KARTOU' AND trans.amount < (
+       SELECT AVG(trans.amount)
+       FROM trans
+       WHERE trans.date BETWEEN '1998-01-01' AND '1998-12-31'
+   )
+   AND trans.date BETWEEN '1998-01-01' AND '1998-12-31'","SELECT T1.account_id FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T1.date) = '1998' AND T1.operation = 'VYBER KARTOU' AND T1.amount < (SELECT AVG(amount) FROM trans WHERE STRFTIME('%Y', date) = '1998')","Who are the account holder identification numbers whose who have transactions on the credit card with the amount is less than the average, in 1998?"
+145,moderate,semantic_layer,False,,3512,7746,"SELECT DISTINCT disp.client_id
+   FROM disp
+   JOIN card ON disp.disp_id = card.disp_id
+   JOIN trans ON disp.account_id = trans.account_id
+   WHERE trans.operation = 'VYBER KARTOU' AND trans.amount < (
+       SELECT AVG(trans.amount)
+       FROM trans
+       WHERE STRFTIME('%Y', trans.date) = '1998'
+   )
+   AND STRFTIME('%Y', trans.date) = '1998'","SELECT T1.account_id FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE STRFTIME('%Y', T1.date) = '1998' AND T1.operation = 'VYBER KARTOU' AND T1.amount < (SELECT AVG(amount) FROM trans WHERE STRFTIME('%Y', date) = '1998')","Who are the account holder identification numbers whose who have transactions on the credit card with the amount is less than the average, in 1998?"
+146,simple,text_to_sql,True,,1500,2423,"SELECT DISTINCT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN card ON disp.disp_id = card.disp_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE client.gender = 'F'",SELECT T1.client_id FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T5 ON T2.account_id = T5.account_id INNER JOIN loan AS T3 ON T5.account_id = T3.account_id INNER JOIN card AS T4 ON T2.disp_id = T4.disp_id WHERE T1.gender = 'F',Who are the female account holders who own credit cards and also have loans?
+146,simple,semantic_layer,False,,1744,7645,"SELECT DISTINCT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE client.gender = 'F'",SELECT T1.client_id FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T5 ON T2.account_id = T5.account_id INNER JOIN loan AS T3 ON T5.account_id = T3.account_id INNER JOIN card AS T4 ON T2.disp_id = T4.disp_id WHERE T1.gender = 'F',Who are the female account holders who own credit cards and also have loans?
+147,simple,text_to_sql,False,,1329,2456,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN client ON account.district_id = client.district_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F' AND district.A3 = 'South Bohemia'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A3 = 'south Bohemia',How many female clients' accounts are in the region of South Bohemia?
+147,simple,semantic_layer,False,,1867,7678,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN client ON account.account_id = client.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F' AND district.A3 = 'South Bohemia'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A3 = 'south Bohemia',How many female clients' accounts are in the region of South Bohemia?
+148,moderate,text_to_sql,False,,2349,2481,"SELECT account.account_id
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN loan ON account.account_id = loan.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE district.A2 = 'Tabor' AND disp.type = 'OWNER'",SELECT T2.account_id FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id WHERE T3.type = 'OWNER' AND T1.A2 = 'Tabor',Please list the accounts whose district is Tabor that are eligible for loans.
+148,moderate,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT account.account_id
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE district.A2 = 'Tabor' AND account.type = 'OWNER'': no such column: account.type",1835,7703,"SELECT account.account_id
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE district.A2 = 'Tabor' AND account.type = 'OWNER'",SELECT T2.account_id FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id WHERE T3.type = 'OWNER' AND T1.A2 = 'Tabor',Please list the accounts whose district is Tabor that are eligible for loans.
+149,challenging,text_to_sql,False,,1431,2639,"SELECT DISTINCT account.frequency, AVG(district.A11)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE account.frequency <> 'OWNER' AND district.A11 > 8000 AND district.A11 <= 9000
+   GROUP BY account.frequency",SELECT T3.type FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id WHERE T3.type != 'OWNER' AND T1.A11 BETWEEN 8000 AND 9000,"Please list the account types that are not eligible for loans, and the average income of residents in the district where the account is located exceeds $8000 but is no more than $9000."
+149,challenging,semantic_layer,False,,1826,7861,"SELECT DISTINCT account.frequency
+FROM account
+JOIN district ON account.district_id = district.district_id
+WHERE account.frequency != 'OWNER' 
+  AND district.A11 > 8000 
+  AND district.A11 <= 9000",SELECT T3.type FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T2.account_id = T3.account_id WHERE T3.type != 'OWNER' AND T1.A11 BETWEEN 8000 AND 9000,"Please list the account types that are not eligible for loans, and the average income of residents in the district where the account is located exceeds $8000 but is no more than $9000."
+150,moderate,text_to_sql,False,,2040,2465,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE district.A3 = 'North Bohemia' AND trans.bank = 'AB'",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.bank = 'AB' AND T1.A3 = 'north Bohemia',How many accounts in North Bohemia has made a transaction with the partner's bank being AB?
+150,moderate,semantic_layer,False,,1656,7687,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN trans ON account.account_id = trans.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A3 = 'North Bohemia' AND trans.bank = 'AB'",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.bank = 'AB' AND T1.A3 = 'north Bohemia',How many accounts in North Bohemia has made a transaction with the partner's bank being AB?
+151,moderate,text_to_sql,True,,894,2481,"SELECT DISTINCT district.A2
+   FROM district
+   JOIN account ON district.district_id = account.district_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.type = 'VYDAJ'",SELECT DISTINCT T1.A2 FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.type = 'VYDAJ',Please list the name of the districts with accounts that made withdrawal transactions.
+151,moderate,semantic_layer,True,,1649,7703,"SELECT DISTINCT district.A2
+   FROM district
+   JOIN account ON district.district_id = account.district_id
+   JOIN trans ON account.account_id = trans.account_id
+   WHERE trans.type = 'VYDAJ'",SELECT DISTINCT T1.A2 FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T3.type = 'VYDAJ',Please list the name of the districts with accounts that made withdrawal transactions.
+152,moderate,text_to_sql,True,,1567,2574,"SELECT AVG(district.A15)
+   FROM district
+   JOIN account ON district.district_id = account.district_id
+   WHERE district.A15 > 4000 AND account.date >= '1997-01-01' AND strftime('%Y', account.date) = '1997'","SELECT AVG(T1.A15) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) >= '1997' AND T1.A15 > 4000",What is the average number of crimes committed in 1995 in regions where the number exceeds 4000 and the region has accounts that are opened starting from the year 1997?
+152,moderate,semantic_layer,True,,1497,7796,"SELECT AVG(A15)
+   FROM district
+   JOIN account ON district.district_id = account.district_id
+   WHERE A15 > 4000 AND STRFTIME('%Y', account.date) >= '1997'","SELECT AVG(T1.A15) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) >= '1997' AND T1.A15 > 4000",What is the average number of crimes committed in 1995 in regions where the number exceeds 4000 and the region has accounts that are opened starting from the year 1997?
+153,simple,text_to_sql,False,,1472,2420,"SELECT COUNT(DISTINCT card.card_id)
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE card.type = 'classic' AND disp.type = 'OWNER'",SELECT COUNT(T1.card_id) FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id WHERE T1.type = 'classic' AND T2.type = 'OWNER',How many 'classic' cards are eligible for loan?
+153,simple,semantic_layer,False,,1966,7642,"SELECT COUNT(DISTINCT card.card_id)
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE card.type = 'classic' AND disp.type = 'OWNER'",SELECT COUNT(T1.card_id) FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id WHERE T1.type = 'classic' AND T2.type = 'OWNER',How many 'classic' cards are eligible for loan?
+154,simple,text_to_sql,True,,1119,2427,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'M' AND district.A2 = 'Hl.m. Praha'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A2 = 'Hl.m. Praha',How many male clients in 'Hl.m. Praha' district?
+154,simple,semantic_layer,True,,1584,7649,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'M' AND district.A2 = 'Hl.m. Praha'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A2 = 'Hl.m. Praha',How many male clients in 'Hl.m. Praha' district?
+155,simple,text_to_sql,False,,1675,2467,"SELECT (COUNT(CASE WHEN card.type = 'Gold' AND card.issued < '1998-01-01' THEN 1 END) * 100.0 / COUNT(card.card_id)) AS percent_gold
+   FROM card","SELECT CAST(SUM(type = 'gold' AND STRFTIME('%Y', issued) < '1998') AS REAL) * 100 / COUNT(card_id) FROM card",How many percent of 'Gold' cards were issued prior to 1998?
+155,simple,semantic_layer,True,,1630,7689,"SELECT (COUNT(CASE WHEN card.type = 'gold' AND card.issued < '1998-01-01' THEN 1 END) * 100.0 / COUNT(card.card_id)) AS percent_gold
+FROM card","SELECT CAST(SUM(type = 'gold' AND STRFTIME('%Y', issued) < '1998') AS REAL) * 100 / COUNT(card_id) FROM card",How many percent of 'Gold' cards were issued prior to 1998?
+156,simple,text_to_sql,True,,1641,2383,"SELECT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.amount = (SELECT MAX(loan.amount) FROM loan)",SELECT T1.client_id FROM disp AS T1 INNER JOIN account AS T3 ON T1.account_id = T3.account_id INNER JOIN loan AS T2 ON T3.account_id = T2.account_id WHERE T1.type = 'OWNER' ORDER BY T2.amount DESC LIMIT 1,Who is the owner of the account with the largest loan amount?
+156,simple,semantic_layer,True,,1529,7605,"SELECT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.amount = (SELECT MAX(amount) FROM loan)
+LIMIT 1;",SELECT T1.client_id FROM disp AS T1 INNER JOIN account AS T3 ON T1.account_id = T3.account_id INNER JOIN loan AS T2 ON T3.account_id = T2.account_id WHERE T1.type = 'OWNER' ORDER BY T2.amount DESC LIMIT 1,Who is the owner of the account with the largest loan amount?
+157,simple,text_to_sql,True,,1470,2477,"SELECT district.A15
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE account.account_id = 532",SELECT T1.A15 FROM district AS T1 INNER JOIN `account` AS T2 ON T1.district_id = T2.district_id WHERE T2.account_id = 532,What is the number of committed crimes in 1995 in the district of the account with the id 532?
+157,simple,semantic_layer,True,,1272,7699,"SELECT district.A15
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE account.account_id = 532",SELECT T1.A15 FROM district AS T1 INNER JOIN `account` AS T2 ON T1.district_id = T2.district_id WHERE T2.account_id = 532,What is the number of committed crimes in 1995 in the district of the account with the id 532?
+158,simple,text_to_sql,True,,1141,2401,"SELECT account.district_id
+   FROM account
+   JOIN ""order"" ON account.account_id = ""order"".account_id
+   WHERE ""order"".order_id = 33333",SELECT T3.district_id FROM `order` AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T2.district_id = T3.district_id WHERE T1.order_id = 33333,What is the district Id of the account that placed the order with the id 33333?
+158,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT account.district_id
+   FROM account
+   JOIN order ON account.account_id = order.account_id
+   WHERE order.order_id = 33333': near ""order"": syntax error",1273,7623,"SELECT account.district_id
+   FROM account
+   JOIN order ON account.account_id = order.account_id
+   WHERE order.order_id = 33333",SELECT T3.district_id FROM `order` AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN district AS T3 ON T2.district_id = T3.district_id WHERE T1.order_id = 33333,What is the district Id of the account that placed the order with the id 33333?
+159,simple,text_to_sql,False,,957,2451,"SELECT trans.trans_id, trans.date, trans.amount
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE trans.operation = 'VYBER' AND disp.client_id = 3356",SELECT T4.trans_id FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN trans AS T4 ON T3.account_id = T4.account_id WHERE T1.client_id = 3356 AND T4.operation = 'VYBER',List all the withdrawals in cash transactions that the client with the id 3356 makes.
+159,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT trans.trans_id, trans.trans_date, trans.amount
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE trans.operation = 'VYBER' AND disp.client_id = 3356': no such column: trans.trans_date",1704,7673,"SELECT trans.trans_id, trans.trans_date, trans.amount
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE trans.operation = 'VYBER' AND disp.client_id = 3356",SELECT T4.trans_id FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 ON T2.account_id = T3.account_id INNER JOIN trans AS T4 ON T3.account_id = T4.account_id WHERE T1.client_id = 3356 AND T4.operation = 'VYBER',List all the withdrawals in cash transactions that the client with the id 3356 makes.
+160,simple,text_to_sql,True,,1152,2446,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE account.frequency = 'POPLATEK TYDNE' AND loan.amount < 200000",SELECT COUNT(T1.account_id) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE T2.frequency = 'POPLATEK TYDNE' AND T1.amount < 200000,"Among the weekly issuance accounts, how many have a loan of under 200000?"
+160,simple,semantic_layer,True,,1620,7668,"SELECT COUNT(DISTINCT account.account_id)
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE account.frequency = 'POPLATEK TYDNE' AND loan.amount < 200000;",SELECT COUNT(T1.account_id) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE T2.frequency = 'POPLATEK TYDNE' AND T1.amount < 200000,"Among the weekly issuance accounts, how many have a loan of under 200000?"
+161,simple,text_to_sql,True,,1518,2385,"SELECT card.type
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE client.client_id = 13539",SELECT T3.type FROM disp AS T1 INNER JOIN client AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T1.disp_id = T3.disp_id WHERE T2.client_id = 13539,What type of credit card does the client with the id 13539 own?
+161,simple,semantic_layer,True,,1523,7607,"SELECT card.type
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE client.client_id = 13539",SELECT T3.type FROM disp AS T1 INNER JOIN client AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T1.disp_id = T3.disp_id WHERE T2.client_id = 13539,What type of credit card does the client with the id 13539 own?
+162,simple,text_to_sql,True,,973,2392,"SELECT district.A3
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.client_id = 3541",SELECT T1.A3 FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T2.client_id = 3541,What is the region of the client with the id 3541 from?
+162,simple,semantic_layer,True,,1631,7614,"SELECT district.A3
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.client_id = 3541",SELECT T1.A3 FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T2.client_id = 3541,What is the region of the client with the id 3541 from?
+163,moderate,text_to_sql,False,"Generated SQL error: Execution failed on sql 'SELECT district.district_id, COUNT(account.account_id) AS account_count
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.status = 'A'
+   GROUP BY district.district_id
+   ORDER BY account_count DESC
+   LIMIT 1': no such column: district.district_id",1721,2464,"SELECT district.district_id, COUNT(account.account_id) AS account_count
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.status = 'A'
+   GROUP BY district.district_id
+   ORDER BY account_count DESC
+   LIMIT 1",SELECT T1.A2 FROM District AS T1 INNER JOIN Account AS T2 ON T1.District_id = T2.District_id INNER JOIN Loan AS T3 ON T2.Account_id = T3.Account_id WHERE T3.status = 'A' GROUP BY T1.District_id ORDER BY COUNT(T2.Account_id) DESC LIMIT 1,Which district has the most accounts with loan contracts finished with no problems?
+163,moderate,semantic_layer,False,,1430,7686,"SELECT district.A2, COUNT(account.account_id) AS account_count
+FROM account
+JOIN loan ON account.account_id = loan.account_id
+JOIN district ON account.district_id = district.district_id
+WHERE loan.status = 'A'
+GROUP BY district.A2
+ORDER BY account_count DESC
+LIMIT 1",SELECT T1.A2 FROM District AS T1 INNER JOIN Account AS T2 ON T1.District_id = T2.District_id INNER JOIN Loan AS T3 ON T2.Account_id = T3.Account_id WHERE T3.status = 'A' GROUP BY T1.District_id ORDER BY COUNT(T2.Account_id) DESC LIMIT 1,Which district has the most accounts with loan contracts finished with no problems?
+164,simple,text_to_sql,False,"Generated SQL error: Execution failed on sql 'SELECT disp.client_id
+   FROM order
+   JOIN account ON order.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE order.order_id = 32423': near ""order"": syntax error",1095,2361,"SELECT disp.client_id
+   FROM order
+   JOIN account ON order.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE order.order_id = 32423",SELECT T3.client_id FROM `order` AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T4 ON T4.account_id = T2.account_id  INNER JOIN client AS T3 ON T4.client_id = T3.client_id WHERE T1.order_id = 32423,Who placed the order with the id 32423?
+164,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT DISTINCT client.client_id
+   FROM order
+   JOIN account ON order.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE order.order_id = 32423': near ""order"": syntax error",1998,7583,"SELECT DISTINCT client.client_id
+   FROM order
+   JOIN account ON order.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE order.order_id = 32423",SELECT T3.client_id FROM `order` AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T4 ON T4.account_id = T2.account_id  INNER JOIN client AS T3 ON T4.client_id = T3.client_id WHERE T1.order_id = 32423,Who placed the order with the id 32423?
+165,simple,text_to_sql,False,,1339,2388,"SELECT trans.trans_id, trans.account_id, trans.date, trans.type, trans.operation, trans.amount, trans.balance, trans.k_symbol, trans.bank, trans.account
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   WHERE account.district_id = 5",SELECT T3.trans_id FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T1.district_id = 5,Please list all the transactions made by accounts from district 5.
+165,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT trans.trans_id, trans.trans_date, trans.type, trans.operation, trans.amount, trans.balance
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.district_id = 5': no such column: trans.trans_date",2689,7610,"SELECT trans.trans_id, trans.trans_date, trans.type, trans.operation, trans.amount, trans.balance
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.district_id = 5",SELECT T3.trans_id FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE T1.district_id = 5,Please list all the transactions made by accounts from district 5.
+166,simple,text_to_sql,False,,1103,2373,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A3 = 'Jesenik'",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE T1.A2 = 'Jesenik',How many of the accounts are from Jesenik district?
+166,simple,semantic_layer,True,,2017,7595,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Jesenik'",SELECT COUNT(T2.account_id) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE T1.A2 = 'Jesenik',How many of the accounts are from Jesenik district?
+167,simple,text_to_sql,True,,1318,2430,"SELECT DISTINCT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN card ON disp.disp_id = card.disp_id
+   WHERE card.type = 'junior' AND card.issued >= '1997-01-01'",SELECT T2.client_id FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id WHERE T1.type = 'junior' AND T1.issued >= '1997-01-01',List all the clients' IDs whose junior credit cards were issued after 1996.
+167,simple,semantic_layer,True,,2177,7652,"SELECT client.client_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN card ON disp.disp_id = card.disp_id
+   WHERE card.type = 'junior' AND card.issued >= '1997-01-01'",SELECT T2.client_id FROM card AS T1 INNER JOIN disp AS T2 ON T1.disp_id = T2.disp_id WHERE T1.type = 'junior' AND T1.issued >= '1997-01-01',List all the clients' IDs whose junior credit cards were issued after 1996.
+168,moderate,text_to_sql,False,"Generated SQL error: Execution failed on sql 'SELECT (COUNT(DISTINCT client.client_id) * 100.0 / (SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN account ON client.client_id = account.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE district.A11 > 10000)) AS percentage_of_women
+   FROM client
+   JOIN account ON client.client_id = account.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F' AND district.A11 > 10000': no such column: account.client_id",2294,2528,"SELECT (COUNT(DISTINCT client.client_id) * 100.0 / (SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN account ON client.client_id = account.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE district.A11 > 10000)) AS percentage_of_women
+   FROM client
+   JOIN account ON client.client_id = account.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F' AND district.A11 > 10000",SELECT CAST(SUM(T2.gender = 'F') AS REAL) * 100 / COUNT(T2.client_id) FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T1.A11 > 10000,What percentage of clients who opened their accounts in the district with an average salary of over 10000 are women?
+168,moderate,semantic_layer,False,,2823,7750,"SELECT COUNT(client.client_id) * 100.0 / (SELECT COUNT(client.client_id)
+   FROM client
+   JOIN account ON client.district_id = account.district_id
+   WHERE account.date IS NOT NULL) AS female_percentage
+FROM client
+JOIN account ON client.district_id = account.district_id
+JOIN district ON client.district_id = district.district_id
+WHERE client.gender = 'F' AND district.A11 > 10000
+-- NOTE: A11 refers to average salary in the district table.",SELECT CAST(SUM(T2.gender = 'F') AS REAL) * 100 / COUNT(T2.client_id) FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T1.A11 > 10000,What percentage of clients who opened their accounts in the district with an average salary of over 10000 are women?
+169,challenging,text_to_sql,False,,2466,2546,"SELECT ((SUM(CASE WHEN loan.date BETWEEN '1997-01-01' AND '1997-12-31' THEN loan.amount ELSE 0 END) - 
+        SUM(CASE WHEN loan.date BETWEEN '1996-01-01' AND '1996-12-31' THEN loan.amount ELSE 0 END)) / 
+        NULLIF(SUM(CASE WHEN loan.date BETWEEN '1996-01-01' AND '1996-12-31' THEN loan.amount ELSE 0 END), 0)) * 100 AS growth_rate
+FROM loan
+JOIN account ON loan.account_id = account.account_id
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+WHERE client.gender = 'M'","SELECT CAST((SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1997' THEN T1.amount ELSE 0 END) - SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1996' THEN T1.amount ELSE 0 END)) AS REAL) * 100 / SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1996' THEN T1.amount ELSE 0 END) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T3 ON T3.account_id = T2.account_id INNER JOIN client AS T4 ON T4.client_id = T3.client_id WHERE T4.gender = 'M' AND T3.type = 'OWNER'",What was the growth rate of the total amount of loans across all accounts for a male client between 1996 and 1997?
+169,challenging,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT (SUM(CASE WHEN loan.loan_year = '1997' THEN loan.amount ELSE 0 END) - 
+         SUM(CASE WHEN loan.loan_year = '1996' THEN loan.amount ELSE 0 END)) * 100.0 / 
+         NULLIF(SUM(CASE WHEN loan.loan_year = '1996' THEN loan.amount ELSE 0 END), 0) AS growth_rate
+FROM loan
+JOIN account ON loan.account_id = account.account_id
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+WHERE client.gender = 'M'': no such column: loan.loan_year",1833,7768,"SELECT (SUM(CASE WHEN loan.loan_year = '1997' THEN loan.amount ELSE 0 END) - 
+         SUM(CASE WHEN loan.loan_year = '1996' THEN loan.amount ELSE 0 END)) * 100.0 / 
+         NULLIF(SUM(CASE WHEN loan.loan_year = '1996' THEN loan.amount ELSE 0 END), 0) AS growth_rate
+FROM loan
+JOIN account ON loan.account_id = account.account_id
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+WHERE client.gender = 'M'","SELECT CAST((SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1997' THEN T1.amount ELSE 0 END) - SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1996' THEN T1.amount ELSE 0 END)) AS REAL) * 100 / SUM(CASE WHEN STRFTIME('%Y', T1.date) = '1996' THEN T1.amount ELSE 0 END) FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T3 ON T3.account_id = T2.account_id INNER JOIN client AS T4 ON T4.client_id = T3.client_id WHERE T4.gender = 'M' AND T3.type = 'OWNER'",What was the growth rate of the total amount of loans across all accounts for a male client between 1996 and 1997?
+170,simple,text_to_sql,False,,1186,2432,"SELECT COUNT(trans.trans_id)
+   FROM trans
+   WHERE trans.operation = 'VYBER KARTOU' AND trans.date > '1995-01-01'","SELECT COUNT(account_id) FROM trans WHERE STRFTIME('%Y', date) > '1995' AND operation = 'VYBER KARTOU'",How many credit card withdrawals were recorded after 1995?
+170,simple,semantic_layer,False,"Generated SQL error: Execution failed on sql 'SELECT COUNT(trans.trans_id)
+   FROM trans
+   JOIN card ON trans.account_id = card.account_id
+   WHERE trans.type = 'VYBER KARTOU' AND trans.date > '1995-12-31'': no such column: card.account_id",2306,7654,"SELECT COUNT(trans.trans_id)
+   FROM trans
+   JOIN card ON trans.account_id = card.account_id
+   WHERE trans.type = 'VYBER KARTOU' AND trans.date > '1995-12-31'","SELECT COUNT(account_id) FROM trans WHERE STRFTIME('%Y', date) > '1995' AND operation = 'VYBER KARTOU'",How many credit card withdrawals were recorded after 1995?
+171,moderate,text_to_sql,False,,1392,2656,"SELECT (SUM(CASE WHEN district.A3 = 'North Bohemia' THEN district.A16 ELSE 0 END) -
+        SUM(CASE WHEN district.A3 = 'East Bohemia' THEN district.A16 ELSE 0 END)) AS crime_difference
+FROM district
+WHERE district.A16 IS NOT NULL;","SELECT SUM(IIF(A3 = 'east Bohemia', A16, 0)) - SUM(IIF(A3 = 'north Bohemia', A16, 0)) FROM district",What was the difference in the number of crimes committed in East and North Bohemia in 1996?
+171,moderate,semantic_layer,False,,2166,7878,"SELECT 
+   (SUM(CASE WHEN district.A3 = 'North Bohemia' THEN district.A16 ELSE 0 END) - 
+    SUM(CASE WHEN district.A3 = 'East Bohemia' THEN district.A16 ELSE 0 END)) AS crime_difference
+FROM district
+WHERE district.A3 IN ('North Bohemia', 'East Bohemia')","SELECT SUM(IIF(A3 = 'east Bohemia', A16, 0)) - SUM(IIF(A3 = 'north Bohemia', A16, 0)) FROM district",What was the difference in the number of crimes committed in East and North Bohemia in 1996?
+172,simple,text_to_sql,False,,962,2417,"SELECT COUNT(disp.disp_id)
+   FROM disp
+   WHERE disp.account_id IN (1, 10) AND disp.type IN ('owner', 'disponent')","SELECT SUM(type = 'OWNER') , SUM(type = 'DISPONENT') FROM disp WHERE account_id BETWEEN 1 AND 10",How many owner and disponent dispositions are there from account number 1 to account number 10?
+172,simple,semantic_layer,False,,1581,7639,"SELECT COUNT(disp.disp_id)
+   FROM disp
+   JOIN account ON disp.account_id = account.account_id
+   WHERE account.account_id IN (1, 10) AND disp.type IN ('owner', 'disponent')","SELECT SUM(type = 'OWNER') , SUM(type = 'DISPONENT') FROM disp WHERE account_id BETWEEN 1 AND 10",How many owner and disponent dispositions are there from account number 1 to account number 10?
+173,challenging,text_to_sql,False,,1403,2480,"SELECT COUNT(trans.trans_id) AS statement_requests, SUM(trans.amount) AS total_debit
+   FROM trans
+   WHERE trans.account_id = 3 AND trans.operation = 'debit' AND trans.k_symbol = '3539'","SELECT T1.frequency, T2.k_symbol FROM account AS T1 INNER JOIN (SELECT account_id, k_symbol, SUM(amount) AS total_amount FROM `order` GROUP BY account_id, k_symbol) AS T2 ON T1.account_id = T2.account_id WHERE T1.account_id = 3 AND T2.total_amount = 3539",How often does account number 3 request an account statement to be released? What was the aim of debiting 3539 in total?
+173,challenging,semantic_layer,False,,2073,7702,"SELECT COUNT(trans.trans_id) AS account_statement_requests,
+       SUM(trans.amount) AS total_debit_amount
+FROM trans
+JOIN account ON trans.account_id = account.account_id
+WHERE account.account_id = 3 AND trans.k_symbol = '3539'","SELECT T1.frequency, T2.k_symbol FROM account AS T1 INNER JOIN (SELECT account_id, k_symbol, SUM(amount) AS total_amount FROM `order` GROUP BY account_id, k_symbol) AS T2 ON T1.account_id = T2.account_id WHERE T1.account_id = 3 AND T2.total_amount = 3539",How often does account number 3 request an account statement to be released? What was the aim of debiting 3539 in total?
+174,simple,text_to_sql,True,,1241,2366,"SELECT strftime('%Y', client.birth_date) AS birth_year
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   WHERE disp.account_id = 130","SELECT STRFTIME('%Y', T1.birth_date) FROM client AS T1 INNER JOIN disp AS T3 ON T1.client_id = T3.client_id INNER JOIN account AS T2 ON T3.account_id = T2.account_id WHERE T2.account_id = 130",What year was account owner number 130 born?
+174,simple,semantic_layer,True,,1814,7588,"SELECT STRFTIME('%Y', client.birth_date)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   WHERE account.account_id = 130","SELECT STRFTIME('%Y', T1.birth_date) FROM client AS T1 INNER JOIN disp AS T3 ON T1.client_id = T3.client_id INNER JOIN account AS T2 ON T3.account_id = T2.account_id WHERE T2.account_id = 130",What year was account owner number 130 born?
+175,moderate,text_to_sql,False,,1575,2495,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE disp.type = 'owner' AND account.frequency = 'POPLATEK PO OBRATU'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id WHERE T2.type = 'OWNER' AND T1.frequency = 'POPLATEK PO OBRATU',How many accounts have an owner disposition and request for a statement to be generated upon a transaction?
+175,moderate,semantic_layer,False,,1446,7717,"SELECT COUNT(DISTINCT account.account_id)
+FROM account
+JOIN disp ON account.account_id = disp.account_id
+WHERE disp.type = 'owner' AND account.frequency = 'POPLATEK PO OBRATU'",SELECT COUNT(T1.account_id) FROM account AS T1 INNER JOIN disp AS T2 ON T1.account_id = T2.account_id WHERE T2.type = 'OWNER' AND T1.frequency = 'POPLATEK PO OBRATU',How many accounts have an owner disposition and request for a statement to be generated upon a transaction?
+176,simple,text_to_sql,False,,1434,2420,"SELECT SUM(loan.amount) AS total_debt, 
+       SUM(loan.payments) AS total_payments
+FROM loan
+JOIN disp ON loan.account_id = disp.account_id
+WHERE disp.client_id = 992","SELECT T4.amount, T4.status FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 on T2.account_id = T3.account_id INNER JOIN loan AS T4 ON T3.account_id = T4.account_id WHERE T1.client_id = 992","What is the amount of debt that client number 992 has, and how is this client doing with payments?"
+176,simple,semantic_layer,False,,2406,7642,"SELECT SUM(loan.amount) AS total_debt, 
+       CASE 
+           WHEN loan.status IN ('A', 'C') THEN 'on_time' 
+           WHEN loan.status IN ('B', 'D') THEN 'default' 
+           ELSE 'unknown' 
+       END AS payment_status
+FROM loan
+JOIN disp ON loan.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+WHERE client.client_id = 992
+GROUP BY client.client_id","SELECT T4.amount, T4.status FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 on T2.account_id = T3.account_id INNER JOIN loan AS T4 ON T3.account_id = T4.account_id WHERE T1.client_id = 992","What is the amount of debt that client number 992 has, and how is this client doing with payments?"
+177,simple,text_to_sql,False,,1735,2440,"SELECT SUM(trans.amount) AS total_transaction_amount, client.gender
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE trans.trans_id = 851 AND client.client_id = 4
+   GROUP BY client.client_id, client.gender;","SELECT T4.balance, T1.gender FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 ON T2.account_id =T3.account_id INNER JOIN trans AS T4 ON T3.account_id = T4.account_id WHERE T1.client_id = 4 AND T4.trans_id = 851","What is the sum that client number 4's account has following transaction 851? Who owns this account, a man or a woman?"
+177,simple,semantic_layer,False,,2341,7662,"SELECT SUM(trans.amount) AS total_amount, 
+       CASE client.gender 
+            WHEN 'M' THEN 'male' 
+            WHEN 'F' THEN 'female' 
+       END AS owner_gender
+FROM trans
+JOIN account ON trans.account_id = account.account_id
+JOIN disp ON account.account_id = disp.account_id
+JOIN client ON disp.client_id = client.client_id
+WHERE trans.trans_id = 851 AND client.client_id = 4","SELECT T4.balance, T1.gender FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN account AS T3 ON T2.account_id =T3.account_id INNER JOIN trans AS T4 ON T3.account_id = T4.account_id WHERE T1.client_id = 4 AND T4.trans_id = 851","What is the sum that client number 4's account has following transaction 851? Who owns this account, a man or a woman?"
+178,simple,text_to_sql,True,,917,2377,"SELECT card.type
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   WHERE disp.client_id = 9",SELECT T3.type FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T2.disp_id = T3.disp_id WHERE T1.client_id = 9,Which kind of credit card does client number 9 possess?
+178,simple,semantic_layer,True,,1513,7599,"SELECT card.type
+   FROM card
+   JOIN disp ON card.disp_id = disp.disp_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE client.client_id = 9",SELECT T3.type FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T2.disp_id = T3.disp_id WHERE T1.client_id = 9,Which kind of credit card does client number 9 possess?
+179,simple,text_to_sql,True,,1394,2404,"SELECT SUM(trans.amount)
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   WHERE disp.client_id = 617 AND strftime('%Y', trans.date) = '1998'","SELECT SUM(T3.amount) FROM client AS T1 INNER JOIN disp AS T4 ON T1.client_id = T4.client_id INNER JOIN account AS T2 ON T4.account_id = T2.account_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE STRFTIME('%Y', T3.date)= '1998' AND T1.client_id = 617","How much, in total, did client number 617 pay for all of the transactions in 1998?"
+179,simple,semantic_layer,True,,2012,7626,"SELECT SUM(trans.amount)
+   FROM trans
+   JOIN account ON trans.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE client.client_id = 617 AND STRFTIME('%Y', trans.date) = '1998'","SELECT SUM(T3.amount) FROM client AS T1 INNER JOIN disp AS T4 ON T1.client_id = T4.client_id INNER JOIN account AS T2 ON T4.account_id = T2.account_id INNER JOIN trans AS T3 ON T2.account_id = T3.account_id WHERE STRFTIME('%Y', T3.date)= '1998' AND T1.client_id = 617","How much, in total, did client number 617 pay for all of the transactions in 1998?"
+180,moderate,text_to_sql,False,,1390,2457,"SELECT client.client_id
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   JOIN account ON client.district_id = account.district_id
+   WHERE client.birth_date BETWEEN '1983-01-01' AND '1987-12-31' AND district.A3 = 'East Bohemia'","SELECT T1.client_id, T3.account_id FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T4 ON T1.client_id = T4.client_id INNER JOIN account AS T3 ON T2.district_id = T3.district_id and T4.account_id = T3.account_id WHERE T2.A3 = 'east Bohemia' AND STRFTIME('%Y', T1.birth_date) BETWEEN '1983' AND '1987'","Please provide a list of clients who were born between 1983 and 1987 and whose account branch is in East Bohemia, along with their IDs."
+180,moderate,semantic_layer,False,,2149,7679,"SELECT client.client_id
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.birth_date BETWEEN '1983-01-01' AND '1987-12-31' AND district.A3 = 'East Bohemia'","SELECT T1.client_id, T3.account_id FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T4 ON T1.client_id = T4.client_id INNER JOIN account AS T3 ON T2.district_id = T3.district_id and T4.account_id = T3.account_id WHERE T2.A3 = 'east Bohemia' AND STRFTIME('%Y', T1.birth_date) BETWEEN '1983' AND '1987'","Please provide a list of clients who were born between 1983 and 1987 and whose account branch is in East Bohemia, along with their IDs."
+181,simple,text_to_sql,False,,1557,2417,"SELECT loan.loan_id
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   WHERE client.gender = 'F'
+   ORDER BY loan.amount DESC
+   LIMIT 3",SELECT T1.client_id FROM client AS T1 INNER JOIN disp AS T4 on T1.client_id= T4.client_id INNER JOIN account AS T2 ON T4.account_id = T2.account_id  INNER JOIN loan AS T3 ON T2.account_id = T3.account_id and T4.account_id = T3.account_id WHERE T1.gender = 'F' ORDER BY T3.amount DESC LIMIT 3,Please provide the IDs of the 3 female clients with the largest loans.
+181,simple,semantic_layer,False,,1315,7639,"SELECT client.client_id
+   FROM client
+   JOIN loan ON client.client_id = loan.account_id
+   WHERE client.gender = 'F'
+   ORDER BY loan.amount DESC
+   LIMIT 3",SELECT T1.client_id FROM client AS T1 INNER JOIN disp AS T4 on T1.client_id= T4.client_id INNER JOIN account AS T2 ON T4.account_id = T2.account_id  INNER JOIN loan AS T3 ON T2.account_id = T3.account_id and T4.account_id = T3.account_id WHERE T1.gender = 'F' ORDER BY T3.amount DESC LIMIT 3,Please provide the IDs of the 3 female clients with the largest loans.
+182,moderate,text_to_sql,False,,1961,2503,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN loan ON disp.account_id = loan.account_id
+   JOIN trans ON loan.account_id = trans.account_id
+   WHERE client.gender = 'M' 
+     AND client.birth_date BETWEEN '1974-01-01' AND '1976-12-31'
+     AND trans.operation = 'SIPO' 
+     AND trans.amount > 4000","SELECT COUNT(T1.account_id) FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T4 ON T2.account_id = T4.account_id INNER JOIN client AS T3 ON T4.client_id = T3.client_id WHERE STRFTIME('%Y', T3.birth_date) BETWEEN '1974' AND '1976' AND T3.gender = 'M' AND T1.amount > 4000 AND T1.k_symbol = 'SIPO'",How many male customers who were born between 1974 and 1976 have made a payment on their home in excess of $4000?
+182,moderate,semantic_layer,False,,3470,7725,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   JOIN trans ON client.client_id = trans.account_id
+   JOIN loan ON trans.account_id = loan.account_id
+   WHERE client.gender = 'M' 
+     AND client.birth_date BETWEEN '1974-01-01' AND '1976-12-31'
+     AND trans.operation = 'SIPO' 
+     AND trans.amount > 4000","SELECT COUNT(T1.account_id) FROM trans AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id INNER JOIN disp AS T4 ON T2.account_id = T4.account_id INNER JOIN client AS T3 ON T4.client_id = T3.client_id WHERE STRFTIME('%Y', T3.birth_date) BETWEEN '1974' AND '1976' AND T3.gender = 'M' AND T1.amount > 4000 AND T1.k_symbol = 'SIPO'",How many male customers who were born between 1974 and 1976 have made a payment on their home in excess of $4000?
+183,simple,text_to_sql,False,,1184,2373,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A3 = 'Beroun' AND account.date > '1996-01-01'","SELECT COUNT(account_id) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T1.date) > '1996' AND T2.A2 = 'Beroun'",How many accounts in Beroun were opened after 1996?
+183,simple,semantic_layer,True,,1709,7595,"SELECT COUNT(account.account_id)
+   FROM account
+   JOIN district ON account.district_id = district.district_id
+   WHERE district.A2 = 'Beroun' AND account.date > '1996-12-31'","SELECT COUNT(account_id) FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T1.date) > '1996' AND T2.A2 = 'Beroun'",How many accounts in Beroun were opened after 1996?
+184,simple,text_to_sql,True,,1050,2399,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN card ON disp.disp_id = card.disp_id
+   WHERE client.gender = 'F' AND card.type = 'junior'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T2.disp_id = T3.disp_id WHERE T1.gender = 'F' AND T3.type = 'junior',How many female customers have a junior credit card?
+184,simple,semantic_layer,True,,1794,7621,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN card ON disp.disp_id = card.disp_id
+   WHERE client.gender = 'F' AND card.type = 'junior'",SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN disp AS T2 ON T1.client_id = T2.client_id INNER JOIN card AS T3 ON T2.disp_id = T3.disp_id WHERE T1.gender = 'F' AND T3.type = 'junior',How many female customers have a junior credit card?
+185,moderate,text_to_sql,False,,6325,2624,"SELECT (COUNT(DISTINCT client.client_id) * 100.0 / NULLIF(COUNT(DISTINCT disp.client_id), 0)) AS female_proportion
+   FROM disp
+   JOIN client ON disp.client_id = client.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN district ON account.district_id = district.district_id
+   WHERE client.gender = 'F' AND district.A3 = 'Prague'",SELECT CAST(SUM(T2.gender = 'F') AS REAL) / COUNT(T2.client_id) * 100 FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T1.A3 = 'Prague',What proportion of customers who have accounts at the Prague branch are female?
+185,moderate,semantic_layer,False,,4376,7846,"SELECT (COUNT(DISTINCT CASE WHEN client.gender = 'F' THEN client.client_id END) * 100.0 / COUNT(DISTINCT client.client_id)) AS female_proportion
+FROM client
+JOIN disp ON client.client_id = disp.client_id
+JOIN account ON disp.account_id = account.account_id
+JOIN district ON account.district_id = district.district_id
+WHERE district.A3 = 'Prague'",SELECT CAST(SUM(T2.gender = 'F') AS REAL) / COUNT(T2.client_id) * 100 FROM district AS T1 INNER JOIN client AS T2 ON T1.district_id = T2.district_id WHERE T1.A3 = 'Prague',What proportion of customers who have accounts at the Prague branch are female?
+186,moderate,text_to_sql,False,,2020,2600,"SELECT (COUNT(DISTINCT client.client_id) * 100.0 / NULLIF(COUNT(DISTINCT disp.client_id), 0)) AS percentage_male_clients
+   FROM disp
+   JOIN client ON disp.client_id = client.client_id
+   WHERE disp.type = 'POPLATEK TYDNE' AND client.gender = 'M'",SELECT CAST(SUM(T1.gender = 'M') AS REAL) * 100 / COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T3 ON T1.district_id = T3.district_id INNER JOIN account AS T2 ON T2.district_id = T3.district_id INNER JOIN disp as T4 on T1.client_id = T4.client_id AND T2.account_id = T4.account_id WHERE T2.frequency = 'POPLATEK TYDNE',What percentage of male clients request for weekly statements to be issued?
+186,moderate,semantic_layer,False,,2967,7822,"SELECT (COUNT(CASE WHEN client.gender = 'M' THEN client.client_id END) * 100.0 / COUNT(client.client_id)) AS percentage_male_clients
+FROM client
+JOIN disp ON client.client_id = disp.client_id
+JOIN account ON disp.account_id = account.account_id
+WHERE account.frequency = 'POPLATEK TYDNE'",SELECT CAST(SUM(T1.gender = 'M') AS REAL) * 100 / COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T3 ON T1.district_id = T3.district_id INNER JOIN account AS T2 ON T2.district_id = T3.district_id INNER JOIN disp as T4 on T1.client_id = T4.client_id AND T2.account_id = T4.account_id WHERE T2.frequency = 'POPLATEK TYDNE',What percentage of male clients request for weekly statements to be issued?
+187,simple,text_to_sql,False,,1438,2439,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   WHERE account.frequency = 'POPLATEK TYDNE' AND disp.type = 'Owner'",SELECT COUNT(T2.account_id) FROM account AS T1 INNER JOIN disp AS T2 ON T2.account_id = T1.account_id WHERE T1.frequency = 'POPLATEK TYDNE' AND T2.type = 'OWNER',How many clients who choose statement of weekly issuance are Owner?
+187,simple,semantic_layer,False,,3057,7661,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   WHERE account.frequency = 'POPLATEK TYDNE' AND disp.type = 'Owner'",SELECT COUNT(T2.account_id) FROM account AS T1 INNER JOIN disp AS T2 ON T2.account_id = T1.account_id WHERE T1.frequency = 'POPLATEK TYDNE' AND T2.type = 'OWNER',How many clients who choose statement of weekly issuance are Owner?
+188,moderate,text_to_sql,True,,1292,2486,"SELECT account.account_id
+   FROM account
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE loan.duration > 24 AND account.date < '1997-01-01'
+   ORDER BY loan.amount ASC
+   LIMIT 1","SELECT T1.account_id FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE T1.duration > 24 AND STRFTIME('%Y', T2.date) < '1997' ORDER BY T1.amount ASC LIMIT 1","Among the accounts who have loan validity more than 24 months, list out the accounts that have the lowest approved amount and have account opening date before 1997."
+188,moderate,semantic_layer,True,,1621,7708,"SELECT account.account_id
+FROM account
+JOIN loan ON account.account_id = loan.account_id
+WHERE loan.duration > 24 AND account.date < '1997-01-01'
+ORDER BY loan.amount ASC
+LIMIT 1;","SELECT T1.account_id FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE T1.duration > 24 AND STRFTIME('%Y', T2.date) < '1997' ORDER BY T1.amount ASC LIMIT 1","Among the accounts who have loan validity more than 24 months, list out the accounts that have the lowest approved amount and have account opening date before 1997."
+189,moderate,text_to_sql,True,,1944,2488,"SELECT DISTINCT account.account_id
+   FROM account
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F'
+   ORDER BY client.birth_date ASC, district.A11 ASC
+   LIMIT 1","SELECT T3.account_id FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN account AS T3 ON T2.district_id = T3.district_id INNER JOIN disp AS T4 ON T1.client_id = T4.client_id AND T4.account_id = T3.account_id  WHERE T1.gender = 'F' ORDER BY T1.birth_date ASC, T2.A11 ASC LIMIT 1",Name the account numbers of female clients who are oldest and have lowest average salary?
+189,moderate,semantic_layer,True,,3712,7710,"SELECT account.account_id
+   FROM account
+   JOIN disp ON account.account_id = disp.account_id
+   JOIN client ON disp.client_id = client.client_id
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.gender = 'F'
+   ORDER BY client.birth_date ASC, district.A11 ASC
+   LIMIT 1;","SELECT T3.account_id FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN account AS T3 ON T2.district_id = T3.district_id INNER JOIN disp AS T4 ON T1.client_id = T4.client_id AND T4.account_id = T3.account_id  WHERE T1.gender = 'F' ORDER BY T1.birth_date ASC, T2.A11 ASC LIMIT 1",Name the account numbers of female clients who are oldest and have lowest average salary?
+190,simple,text_to_sql,False,,1417,2444,"SELECT COUNT(client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE client.birth_date BETWEEN '1920-01-01' AND '1920-12-31' AND district.A3 = 'East Bohemia'","SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T1.birth_date) = '1920' AND T2.A3 = 'east Bohemia'",How many clients who were born in 1920 stay in east Bohemia?
+190,simple,semantic_layer,False,,2536,7666,"SELECT COUNT(DISTINCT client.client_id)
+   FROM client
+   JOIN district ON client.district_id = district.district_id
+   WHERE STRFTIME('%Y', client.birth_date) = '1920' AND district.A3 = 'East Bohemia'","SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T1.birth_date) = '1920' AND T2.A3 = 'east Bohemia'",How many clients who were born in 1920 stay in east Bohemia?
+191,simple,text_to_sql,True,,1545,2476,"SELECT COUNT(loan.account_id)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   WHERE loan.duration = 24 AND account.frequency = 'POPLATEK TYDNE'",SELECT COUNT(T2.account_id) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.duration = 24 AND T1.frequency = 'POPLATEK TYDNE',How many loan accounts are for pre-payment of duration of 24 months with weekly issuance of statement.
+191,simple,semantic_layer,True,,1548,7698,"SELECT COUNT(loan.account_id)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   WHERE loan.duration = 24 AND account.frequency = 'POPLATEK TYDNE'",SELECT COUNT(T2.account_id) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.duration = 24 AND T1.frequency = 'POPLATEK TYDNE',How many loan accounts are for pre-payment of duration of 24 months with weekly issuance of statement.
+192,moderate,text_to_sql,False,,2064,2605,"SELECT AVG(loan.amount)
+   FROM loan
+   JOIN trans ON loan.account_id = trans.account_id
+   WHERE loan.status IN ('C', 'D') AND trans.k_symbol = 'POPLATEK PO OBRATU'","SELECT AVG(T2.amount) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.status IN ('C', 'D') AND T1.frequency = 'POPLATEK PO OBRATU'",What is the average amount of loan which are still on running contract with statement issuance after each transaction?
+192,moderate,semantic_layer,True,,2428,7827,"SELECT AVG(loan.amount)
+   FROM loan
+   JOIN account ON loan.account_id = account.account_id
+   WHERE loan.status IN ('C', 'D') AND account.frequency = 'POPLATEK PO OBRATU'","SELECT AVG(T2.amount) FROM account AS T1 INNER JOIN loan AS T2 ON T1.account_id = T2.account_id WHERE T2.status IN ('C', 'D') AND T1.frequency = 'POPLATEK PO OBRATU'",What is the average amount of loan which are still on running contract with statement issuance after each transaction?
+193,moderate,text_to_sql,False,,2390,2512,"SELECT client.client_id, client.district_id
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN account ON disp.account_id = account.account_id
+   JOIN loan ON account.account_id = loan.account_id
+   WHERE disp.type = 'owner'
+GROUP BY client.client_id, client.district_id","SELECT T3.client_id, T2.district_id, T2.A2 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T1.account_id = T3.account_id WHERE T3.type = 'OWNER'",List all ID and district for clients that can only have the right to issue permanent orders or apply for loans.
+193,moderate,semantic_layer,False,,2087,7734,"SELECT DISTINCT client.client_id, district.A2
+FROM client
+JOIN disp ON client.client_id = disp.client_id
+JOIN account ON disp.account_id = account.account_id
+JOIN district ON client.district_id = district.district_id
+WHERE disp.type = 'owner' AND account.account_id IN (SELECT loan.account_id FROM loan)","SELECT T3.client_id, T2.district_id, T2.A2 FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN disp AS T3 ON T1.account_id = T3.account_id WHERE T3.type = 'OWNER'",List all ID and district for clients that can only have the right to issue permanent orders or apply for loans.
+194,moderate,text_to_sql,False,,1823,2521,"SELECT client.client_id, strftime('%Y', 'now') - strftime('%Y', client.birth_date) AS age
+   FROM client
+   JOIN disp ON client.client_id = disp.client_id
+   JOIN card ON disp.disp_id = card.disp_id
+   JOIN loan ON disp.account_id = loan.account_id
+   WHERE card.type = 'gold' AND disp.type = 'OWNER'","SELECT T1.client_id, STRFTIME('%Y', CURRENT_TIMESTAMP) - STRFTIME('%Y', T3.birth_date) FROM disp AS T1 INNER JOIN card AS T2 ON T2.disp_id = T1.disp_id INNER JOIN client AS T3 ON T1.client_id = T3.client_id WHERE T2.type = 'gold' AND T1.type = 'OWNER'","Provide the IDs and age of the client with high level credit card, which is eligible for loans."
+194,moderate,semantic_layer,False,,2580,7743,"SELECT client.client_id, STRFTIME('%Y', 'now') - STRFTIME('%Y', client.birth_date) AS age
+FROM client
+JOIN disp ON client.client_id = disp.client_id
+JOIN card ON disp.disp_id = card.disp_id
+JOIN loan ON disp.account_id = loan.account_id
+WHERE card.type = 'gold' AND disp.type = 'OWNER'","SELECT T1.client_id, STRFTIME('%Y', CURRENT_TIMESTAMP) - STRFTIME('%Y', T3.birth_date) FROM disp AS T1 INNER JOIN card AS T2 ON T2.disp_id = T1.disp_id INNER JOIN client AS T3 ON T1.client_id = T3.client_id WHERE T2.type = 'gold' AND T1.type = 'OWNER'","Provide the IDs and age of the client with high level credit card, which is eligible for loans."

@@ -1,0 +1,5 @@
+﻿phase,method,simple_accuracy,moderate_accuracy,challenging_accuracy,F_statistic,p_value,significance
+Phase 2 (BIRD),semantic_layer,0.5484,0.2973,0.0,6.2726,0.0027,*
+Phase 2 (BIRD),text_to_sql,0.5323,0.2162,0.0,8.1518,0.0005,***
+Phase 3 (Credit),semantic_layer,0.6364,0.381,0.0588,43.2458,0.0,***
+Phase 3 (Credit),text_to_sql,0.6909,0.3905,0.0,70.1085,0.0,***
