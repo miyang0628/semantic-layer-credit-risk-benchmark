@@ -1,4 +1,0 @@
-﻿phase,sl_accuracy,sql_accuracy,sl_n,sql_n,delta,chi2,p_value,significance,cohens_d,d_interpretation
-Phase 1 (ACME),0.754,0.629,2585,2585,0.125,94.5602,0.0,***,0.2731,small
-Phase 2 (BIRD),0.4245,0.3868,106,106,0.0377,0.1761,0.6748,n.s.,0.0769,negligible
-Phase 3 (Credit),0.3833,0.39,300,300,-0.0067,0.007,0.9332,n.s.,-0.0137,negligible
