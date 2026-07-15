@@ -1,4 +1,0 @@
-﻿metric,text_to_sql,semantic_layer,reduction_pct
-Sensitive columns exposed (distinct),15,0,100.0
-Internal codes exposed (distinct),0,0,
-Schema context size (chars),976,3555,-264.2
