@@ -1,5 +1,0 @@
-﻿phase,method,mean,ci_lower,ci_upper
-Phase 2 (BIRD),semantic_layer,0.4245,0.3302,0.5189
-Phase 2 (BIRD),text_to_sql,0.3868,0.2925,0.4811
-Phase 3 (Credit),semantic_layer,0.3833,0.33,0.44
-Phase 3 (Credit),text_to_sql,0.39,0.3367,0.4467
