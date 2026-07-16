@@ -1,0 +1,7 @@
+﻿question_id,category,difficulty,question,my_sql,gold_sql,status
+CR41,transaction_behavior,moderate,"For accounts with defaulted loans, what is the ratio of withdrawal transactions to deposit transactions?","SELECT 
+    CAST(SUM(CASE WHEN t.type = 'VYDAJ' THEN 1 ELSE 0 END) AS REAL) 
+    / NULLIF(SUM(CASE WHEN t.type = 'PRIJEM' THEN 1 ELSE 0 END), 0) AS withdrawal_deposit_ratio
+FROM trans t
+JOIN loan l ON t.account_id = l.account_id
+WHERE l.status = 'D'","SELECT CAST(SUM(CASE WHEN trans.type = 'VYDAJ' THEN 1 ELSE 0 END) AS REAL) / NULLIF(SUM(CASE WHEN trans.type = 'PRIJEM' THEN 1 ELSE 0 END), 0) AS withdrawal_deposit_ratio FROM trans JOIN loan ON trans.account_id = loan.account_id WHERE loan.status = 'D'",match
